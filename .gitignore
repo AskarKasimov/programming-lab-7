@@ -2,5 +2,6 @@ out/
 .idea/
 *.iml
 target/
-collection*.json
 script*
+.env
+postgres_data/
