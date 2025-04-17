@@ -1,9 +1,8 @@
 version: "3.8"
 
 services:
-  postgres:
+  postgres_lab7:
     image: postgres:17.2-alpine
-    container_name: postgres_container
     env_file: .env
     environment:
       POSTGRES_USER: ${PG_USER}
