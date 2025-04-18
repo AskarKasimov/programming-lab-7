@@ -1,11 +1,12 @@
 package ru.askar.serverLab6.collectionCommand;
 
-import java.util.ArrayList;
-import java.util.List;
 import ru.askar.common.CommandResponse;
 import ru.askar.common.cli.Command;
 import ru.askar.common.cli.CommandExecutor;
 import ru.askar.common.cli.CommandResponseCode;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class HelpCommand extends CollectionCommand {
     private final CommandExecutor<CollectionCommand> executor;

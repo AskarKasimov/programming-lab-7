@@ -1,8 +1,5 @@
 package ru.askar.clientLab6;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import ru.askar.clientLab6.clientCommand.*;
 import ru.askar.clientLab6.connection.ClientHandler;
 import ru.askar.clientLab6.connection.TcpClientHandler;
@@ -11,6 +8,10 @@ import ru.askar.common.cli.CommandParser;
 import ru.askar.common.cli.input.InputReader;
 import ru.askar.common.cli.output.OutputWriter;
 import ru.askar.common.cli.output.Stdout;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class Main {
     public static void main(String[] args) {

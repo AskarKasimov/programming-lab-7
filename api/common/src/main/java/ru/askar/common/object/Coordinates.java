@@ -2,13 +2,14 @@ package ru.askar.common.object;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.Objects;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.cli.input.InputReader;
 import ru.askar.common.cli.output.OutputWriter;
 import ru.askar.common.exception.UserRejectedToFillFieldsException;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Objects;
 
 public class Coordinates implements Serializable {
     private Float x;
@@ -20,13 +21,14 @@ public class Coordinates implements Serializable {
         setY(y);
     }
 
-    private Coordinates() {}
+    private Coordinates() {
+    }
 
     /**
      * Создание экземпляра с пользовательским вводом.
      *
      * @param outputWriter - способ печати ответа
-     * @param inputReader - способ считывания входных данных
+     * @param inputReader  - способ считывания входных данных
      * @return - созданный Coordinates
      */
     public static Coordinates createCoordinates(

@@ -1,5 +1,14 @@
 package ru.askar.serverLab6.connection;
 
+import ru.askar.common.CommandAsList;
+import ru.askar.common.CommandResponse;
+import ru.askar.common.CommandToExecute;
+import ru.askar.common.cli.CommandExecutor;
+import ru.askar.common.cli.CommandResponseCode;
+import ru.askar.serverLab6.collectionCommand.CollectionCommand;
+import ru.askar.serverLab6.collectionCommand.ExitCommand;
+import ru.askar.serverLab6.collectionCommand.ObjectCollectionCommand;
+
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -10,14 +19,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import ru.askar.common.CommandAsList;
-import ru.askar.common.CommandResponse;
-import ru.askar.common.CommandToExecute;
-import ru.askar.common.cli.CommandExecutor;
-import ru.askar.common.cli.CommandResponseCode;
-import ru.askar.serverLab6.collectionCommand.CollectionCommand;
-import ru.askar.serverLab6.collectionCommand.ExitCommand;
-import ru.askar.serverLab6.collectionCommand.ObjectCollectionCommand;
 
 public class TcpServerHandler implements ServerHandler {
     private final CommandExecutor<CollectionCommand> collectionCommandExecutor;
@@ -50,22 +51,22 @@ public class TcpServerHandler implements ServerHandler {
         running = true;
 
         new Thread(
-                        () -> {
-                            try {
-                                while (running) {
-                                    selector.select(100);
-                                    processSelectedKeys();
-                                    processOutputQueue();
-                                }
-                            } catch (Exception e) {
-                                if (running) {
-                                    System.out.println(
-                                            "Ошибка в потоке хэндлера: " + e.getMessage());
-                                } // а иначе тупо сервер оказался закрыт извне)))
-                            } finally {
-                                closeResources();
-                            }
-                        })
+                () -> {
+                    try {
+                        while (running) {
+                            selector.select(100);
+                            processSelectedKeys();
+                            processOutputQueue();
+                        }
+                    } catch (Exception e) {
+                        if (running) {
+                            System.out.println(
+                                    "Ошибка в потоке хэндлера: " + e.getMessage());
+                        } // а иначе тупо сервер оказался закрыт извне)))
+                    } finally {
+                        closeResources();
+                    }
+                })
                 .start();
     }
 
@@ -205,7 +206,7 @@ public class TcpServerHandler implements ServerHandler {
                     ByteBuffer data = serialize(message);
                     ByteBuffer header = ByteBuffer.allocate(4).putInt(data.limit()).flip();
 
-                    if (channel.write(new ByteBuffer[] {header, data}) == 0) {
+                    if (channel.write(new ByteBuffer[]{header, data}) == 0) {
                         queue.offer(message);
                         break;
                     }
@@ -231,7 +232,7 @@ public class TcpServerHandler implements ServerHandler {
 
     private ByteBuffer serialize(Object dto) throws IOException {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+             ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(dto);
             return ByteBuffer.wrap(bos.toByteArray());
         }
@@ -239,8 +240,8 @@ public class TcpServerHandler implements ServerHandler {
 
     private Object deserialize(ByteBuffer buffer) throws IOException {
         try (ObjectInputStream ois =
-                new ObjectInputStream(
-                        new ByteArrayInputStream(buffer.array(), 0, buffer.limit()))) {
+                     new ObjectInputStream(
+                             new ByteArrayInputStream(buffer.array(), 0, buffer.limit()))) {
             return ois.readObject();
         } catch (ClassNotFoundException e) {
             throw new IOException("Ошибка десериализации: " + e.getMessage());

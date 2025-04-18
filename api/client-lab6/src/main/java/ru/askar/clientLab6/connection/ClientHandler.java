@@ -1,7 +1,8 @@
 package ru.askar.clientLab6.connection;
 
-import java.io.IOException;
 import ru.askar.clientLab6.NeedToReconnectException;
+
+import java.io.IOException;
 
 public interface ClientHandler {
     void start() throws IOException, NeedToReconnectException;

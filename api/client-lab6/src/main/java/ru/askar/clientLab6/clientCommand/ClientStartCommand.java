@@ -1,10 +1,11 @@
 package ru.askar.clientLab6.clientCommand;
 
-import java.io.IOException;
 import ru.askar.clientLab6.NeedToReconnectException;
 import ru.askar.clientLab6.connection.ClientHandler;
 import ru.askar.common.CommandResponse;
 import ru.askar.common.cli.CommandResponseCode;
+
+import java.io.IOException;
 
 public class ClientStartCommand extends ClientCommand {
     private static final int TIME_FOR_RETRY = 2000;

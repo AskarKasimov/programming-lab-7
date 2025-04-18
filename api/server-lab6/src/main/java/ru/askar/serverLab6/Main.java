@@ -1,7 +1,5 @@
 package ru.askar.serverLab6;
 
-import java.io.*;
-import java.util.ArrayList;
 import ru.askar.common.CommandAsList;
 import ru.askar.common.cli.CommandExecutor;
 import ru.askar.common.cli.CommandParser;
@@ -16,6 +14,9 @@ import ru.askar.serverLab6.collectionCommand.*;
 import ru.askar.serverLab6.connection.ServerHandler;
 import ru.askar.serverLab6.connection.TcpServerHandler;
 import ru.askar.serverLab6.serverCommand.*;
+
+import java.io.*;
+import java.util.ArrayList;
 
 public class Main {
 

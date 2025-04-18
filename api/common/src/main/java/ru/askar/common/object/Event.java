@@ -2,12 +2,13 @@ package ru.askar.common.object;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.io.Serializable;
-import java.util.Objects;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.cli.input.InputReader;
 import ru.askar.common.cli.output.OutputWriter;
 import ru.askar.common.exception.UserRejectedToFillFieldsException;
+
+import java.io.Serializable;
+import java.util.Objects;
 
 public class Event implements Comparable<Event>, Serializable {
     private Integer id;
@@ -35,7 +36,7 @@ public class Event implements Comparable<Event>, Serializable {
      * Создание экземпляра с пользовательским вводом.
      *
      * @param outputWriter - способ печати ответа
-     * @param inputReader - способ считывания входных данных
+     * @param inputReader  - способ считывания входных данных
      */
     public static Event createEvent(
             OutputWriter outputWriter, InputReader inputReader, Integer id, boolean scriptMode)

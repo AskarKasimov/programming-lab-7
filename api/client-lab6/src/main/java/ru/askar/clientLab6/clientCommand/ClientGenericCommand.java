@@ -1,6 +1,5 @@
 package ru.askar.clientLab6.clientCommand;
 
-import java.io.IOException;
 import ru.askar.clientLab6.connection.ClientHandler;
 import ru.askar.common.CommandAsList;
 import ru.askar.common.CommandResponse;
@@ -8,7 +7,6 @@ import ru.askar.common.CommandToExecute;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.cli.input.InputReader;
 import ru.askar.common.cli.output.OutputWriter;
-import ru.askar.common.exception.InvalidInputFieldException;
 import ru.askar.common.exception.UserRejectedToFillFieldsException;
 import ru.askar.common.object.Ticket;
 

@@ -3,11 +3,12 @@ package ru.askar.serverLab6.collectionCommand;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import ru.askar.common.CommandResponse;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.serverLab6.collection.CollectionManager;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class SaveCommand extends CollectionCommand {
     public SaveCommand(CollectionManager collectionManager) {
@@ -27,7 +28,7 @@ public class SaveCommand extends CollectionCommand {
         // Отключаем вывод даты в виде массива
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         try (FileOutputStream fileOutputStream =
-                new FileOutputStream(collectionManager.getStarterSource())) {
+                     new FileOutputStream(collectionManager.getStarterSource())) {
             objectMapper
                     .writerWithDefaultPrettyPrinter()
                     .writeValue(fileOutputStream, collectionManager.getCollection().values());

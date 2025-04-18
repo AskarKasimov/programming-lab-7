@@ -1,17 +1,20 @@
 package ru.askar.clientLab6.clientCommand;
 
-import java.util.ArrayList;
-import java.util.List;
 import ru.askar.clientLab6.connection.ClientHandler;
 import ru.askar.common.CommandResponse;
 import ru.askar.common.cli.Command;
 import ru.askar.common.cli.CommandExecutor;
 import ru.askar.common.cli.CommandResponseCode;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ClientHelpCommand extends ClientCommand {
     private final CommandExecutor<ClientCommand> executor;
 
-    /** Заполнение имени и количества требуемых аргументов */
+    /**
+     * Заполнение имени и количества требуемых аргументов
+     */
     public ClientHelpCommand(ClientHandler serverHandler, CommandExecutor<ClientCommand> executor) {
         super("help", 0, "help - вывести справку по доступным серверным командам", serverHandler);
         this.executor = executor;

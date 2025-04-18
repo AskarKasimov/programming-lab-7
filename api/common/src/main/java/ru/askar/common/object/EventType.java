@@ -1,12 +1,13 @@
 package ru.askar.common.object;
 
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.cli.input.InputReader;
 import ru.askar.common.cli.output.OutputWriter;
 import ru.askar.common.exception.UserRejectedToFillFieldsException;
+
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public enum EventType implements Serializable {
     E_SPORTS,
@@ -15,7 +16,9 @@ public enum EventType implements Serializable {
     OPERA,
     EXPOSITION;
 
-    /** Получить доступные типы в строковом представлении */
+    /**
+     * Получить доступные типы в строковом представлении
+     */
     public static String getStringValues() {
         return Arrays.stream(values()).map(Enum::name).collect(Collectors.joining(","));
     }
@@ -25,7 +28,7 @@ public enum EventType implements Serializable {
      * выбрать ещё раз.
      *
      * @param outputWriter - способ печати ответа
-     * @param inputReader - способ считывания входных данных
+     * @param inputReader  - способ считывания входных данных
      * @return требуемый EventType
      */
     public static EventType createEventType(

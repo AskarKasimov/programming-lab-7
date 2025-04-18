@@ -1,8 +1,5 @@
 package ru.askar.common.cli.input;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.math.BigDecimal;
 import ru.askar.common.CommandResponse;
 import ru.askar.common.cli.CommandExecutor;
 import ru.askar.common.cli.CommandParser;
@@ -12,8 +9,14 @@ import ru.askar.common.exception.ExitCLIException;
 import ru.askar.common.exception.InvalidCommandException;
 import ru.askar.common.exception.NoSuchCommandException;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.math.BigDecimal;
+
 public class InputReader {
-    /** Класс, ответственный за чтение ввода от пользователя и исполнение команд. */
+    /**
+     * Класс, ответственный за чтение ввода от пользователя и исполнение команд.
+     */
     private final CommandExecutor commandExecutor;
 
     private final CommandParser commandParser;
@@ -22,8 +25,8 @@ public class InputReader {
 
     /**
      * @param commandExecutor - класс для выполнения команд.
-     * @param commandParser - класс для парсинга команд.
-     * @param bufferedReader - класс для чтения ввода.
+     * @param commandParser   - класс для парсинга команд.
+     * @param bufferedReader  - класс для чтения ввода.
      */
     public InputReader(
             CommandExecutor commandExecutor,
@@ -88,7 +91,9 @@ public class InputReader {
         }
     }
 
-    /** Выполнение поступающих команд. */
+    /**
+     * Выполнение поступающих команд.
+     */
     public void process() throws IOException {
         String line;
         while ((line = bufferedReader.readLine()) != null) {
@@ -112,8 +117,8 @@ public class InputReader {
                                                     + parsedCommand.name()
                                                     + " требуется "
                                                     + commandExecutor
-                                                            .getCommand(parsedCommand.name())
-                                                            .getArgsCount()));
+                                                    .getCommand(parsedCommand.name())
+                                                    .getArgsCount()));
                     continue;
                 }
                 CommandResponse commandResponse =

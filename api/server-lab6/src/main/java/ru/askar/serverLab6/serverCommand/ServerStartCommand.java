@@ -5,7 +5,9 @@ import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.serverLab6.connection.ServerHandler;
 
 public class ServerStartCommand extends ServerCommand {
-    /** Заполнение имени и количества требуемых аргументов */
+    /**
+     * Заполнение имени и количества требуемых аргументов
+     */
     public ServerStartCommand(ServerHandler serverHandler) {
         super("start", 1, "start port - запуск сервера на указанном порту", serverHandler);
     }

@@ -9,8 +9,8 @@ public enum CommandResponseCode implements Serializable {
     WARNING("\u001B[33m"),
     ERROR("\u001B[31m");
 
-    private final String color;
     private static final String RESET = "\u001B[0m";
+    private final String color;
 
     CommandResponseCode(String color) {
         this.color = color;

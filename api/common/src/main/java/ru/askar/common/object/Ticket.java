@@ -2,13 +2,14 @@ package ru.askar.common.object;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.Objects;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.cli.input.InputReader;
 import ru.askar.common.cli.output.OutputWriter;
 import ru.askar.common.exception.UserRejectedToFillFieldsException;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class Ticket implements Comparable<Ticket>, Serializable {
     private final LocalDateTime creationDate;
@@ -48,10 +49,10 @@ public class Ticket implements Comparable<Ticket>, Serializable {
      * price</code> будут считываться из заданного метода
      *
      * @param outputWriter - способ печати ответа
-     * @param inputReader - способ считывания входных данных
-     * @param ticketId - id билета
-     * @param name - название
-     * @param price - цена
+     * @param inputReader  - способ считывания входных данных
+     * @param ticketId     - id билета
+     * @param name         - название
+     * @param price        - цена
      * @return - созданный Ticket
      */
     public static Ticket createTicket(
@@ -99,7 +100,9 @@ public class Ticket implements Comparable<Ticket>, Serializable {
         return Objects.hash(id, name, coordinates, creationDate, price, type, event);
     }
 
-    /** Сравнение, реализованное через разницу id'шников */
+    /**
+     * Сравнение, реализованное через разницу id'шников
+     */
     @Override
     public int compareTo(Ticket other) {
         // Сначала сравниваем по типу билета

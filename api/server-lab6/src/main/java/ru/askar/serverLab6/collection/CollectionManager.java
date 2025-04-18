@@ -1,18 +1,21 @@
 package ru.askar.serverLab6.collection;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
+import ru.askar.common.exception.InvalidCollectionFileException;
+import ru.askar.common.exception.InvalidInputFieldException;
+import ru.askar.common.object.Event;
+import ru.askar.common.object.Ticket;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import ru.askar.common.exception.InvalidCollectionFileException;
-import ru.askar.common.exception.InvalidInputFieldException;
-import ru.askar.common.object.Event;
-import ru.askar.common.object.Ticket;
 
-/** Manager для коллекции билетов. */
+/**
+ * Manager для коллекции билетов.
+ */
 public class CollectionManager {
     private final LocalDateTime dateOfInitialization;
     private final TreeMap<Long, Ticket> collection = new TreeMap<>();
@@ -24,7 +27,8 @@ public class CollectionManager {
             starterDataReader =
                     new DataReader() {
                         @Override
-                        public void readData() {}
+                        public void readData() {
+                        }
 
                         @Override
                         public TreeMap<Long, Ticket> getData() {

@@ -3,12 +3,13 @@ package ru.askar.serverLab6.collectionCommand;
 import com.github.freva.asciitable.AsciiTable;
 import com.github.freva.asciitable.Column;
 import com.github.freva.asciitable.HorizontalAlign;
-import java.util.Arrays;
-import java.util.List;
 import ru.askar.common.CommandResponse;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.object.Ticket;
 import ru.askar.serverLab6.collection.CollectionManager;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class FilterStartsWithNameCommand extends CollectionCommand {
     public FilterStartsWithNameCommand(CollectionManager collectionManager) {
@@ -74,7 +75,7 @@ public class FilterStartsWithNameCommand extends CollectionCommand {
                                                 ticket ->
                                                         ticket.getEvent() != null
                                                                 ? String.valueOf(
-                                                                        ticket.getEvent().getId())
+                                                                ticket.getEvent().getId())
                                                                 : "-"),
                                 new Column()
                                         .header("Название события")
@@ -101,12 +102,12 @@ public class FilterStartsWithNameCommand extends CollectionCommand {
                                         .with(
                                                 ticket ->
                                                         ticket.getEvent() != null
-                                                                        && ticket.getEvent()
-                                                                                        .getEventType()
-                                                                                != null
+                                                                && ticket.getEvent()
+                                                                .getEventType()
+                                                                != null
                                                                 ? ticket.getEvent()
-                                                                        .getEventType()
-                                                                        .name()
+                                                                .getEventType()
+                                                                .name()
                                                                 : "-"))));
     }
 }

@@ -1,10 +1,11 @@
 package ru.askar.clientLab6.clientCommand;
 
-import java.io.*;
 import ru.askar.clientLab6.connection.ClientHandler;
 import ru.askar.common.CommandResponse;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.cli.input.InputReader;
+
+import java.io.*;
 
 public class ClientScriptCommand extends ClientCommand {
     private final InputReader inputReader;

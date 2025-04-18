@@ -1,14 +1,5 @@
 package ru.askar.clientLab6.connection;
 
-import java.io.*;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import ru.askar.clientLab6.NeedToReconnectException;
 import ru.askar.clientLab6.clientCommand.ClientCommand;
 import ru.askar.clientLab6.clientCommand.ClientGenericCommand;
@@ -19,21 +10,30 @@ import ru.askar.common.cli.CommandParser;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.cli.input.InputReader;
 
+import java.io.*;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 public class TcpClientHandler implements ClientHandler {
     private final InputReader inputReader; // основной InputReader
     private final CommandExecutor<ClientCommand> commandExecutor;
     private final ConcurrentLinkedQueue<Object> outputQueue = new ConcurrentLinkedQueue<>();
+    private final int maxDepth = 3;
+    private final List<ClientCommand> originalCommands = new ArrayList<>();
     private String host = "";
     private int port = -1;
     private Selector selector;
     private SocketChannel channel;
     private volatile boolean running = false;
     private int depth = 0;
-    private final int maxDepth = 3;
-
     // Для вложенного режима
     private InputReader nestedInputReader = null;
-    private final List<ClientCommand> originalCommands = new ArrayList<>();
 
     public TcpClientHandler(
             InputReader inputReader, CommandExecutor<ClientCommand> commandExecutor) {
@@ -232,7 +232,7 @@ public class TcpClientHandler implements ClientHandler {
                     ByteBuffer header = ByteBuffer.allocate(4);
                     header.putInt(data.limit());
                     header.flip();
-                    channel.write(new ByteBuffer[] {header, data});
+                    channel.write(new ByteBuffer[]{header, data});
                 }
             }
         } catch (IOException | CancelledKeyException e) {
@@ -248,7 +248,7 @@ public class TcpClientHandler implements ClientHandler {
 
     private ByteBuffer serialize(Object dto) throws IOException {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+             ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(dto);
             return ByteBuffer.wrap(bos.toByteArray());
         }
@@ -256,8 +256,8 @@ public class TcpClientHandler implements ClientHandler {
 
     private Object deserialize(ByteBuffer buffer) throws IOException, ClassNotFoundException {
         try (ObjectInputStream ois =
-                new ObjectInputStream(
-                        new ByteArrayInputStream(buffer.array(), 0, buffer.limit()))) {
+                     new ObjectInputStream(
+                             new ByteArrayInputStream(buffer.array(), 0, buffer.limit()))) {
             return ois.readObject();
         }
     }

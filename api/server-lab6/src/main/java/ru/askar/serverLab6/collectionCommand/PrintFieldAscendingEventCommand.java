@@ -3,14 +3,15 @@ package ru.askar.serverLab6.collectionCommand;
 import com.github.freva.asciitable.AsciiTable;
 import com.github.freva.asciitable.Column;
 import com.github.freva.asciitable.HorizontalAlign;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
 import ru.askar.common.CommandResponse;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.object.Event;
 import ru.askar.common.object.Ticket;
 import ru.askar.serverLab6.collection.CollectionManager;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
 public class PrintFieldAscendingEventCommand extends CollectionCommand {
     public PrintFieldAscendingEventCommand(CollectionManager collectionManager) {

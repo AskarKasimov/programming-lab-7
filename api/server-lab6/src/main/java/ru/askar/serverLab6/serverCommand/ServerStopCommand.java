@@ -1,6 +1,5 @@
 package ru.askar.serverLab6.serverCommand;
 
-import java.io.IOException;
 import ru.askar.common.CommandResponse;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.serverLab6.connection.ServerHandler;

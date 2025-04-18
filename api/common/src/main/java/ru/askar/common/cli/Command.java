@@ -1,10 +1,13 @@
 package ru.askar.common.cli;
 
-import java.io.Serializable;
 import ru.askar.common.CommandResponse;
 import ru.askar.common.exception.ExitCLIException;
 
-/** Абстрактный класс для команд */
+import java.io.Serializable;
+
+/**
+ * Абстрактный класс для команд
+ */
 public abstract class Command implements Serializable {
     protected final int argsCount;
     protected final String name;
@@ -34,7 +37,9 @@ public abstract class Command implements Serializable {
      */
     public abstract CommandResponse execute(String[] args) throws ExitCLIException;
 
-    /** Выдать справку об использовании команды */
+    /**
+     * Выдать справку об использовании команды
+     */
     public String getInfo() {
         return info;
     }
