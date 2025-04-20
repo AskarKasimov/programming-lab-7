@@ -1,7 +1,5 @@
 package ru.askar.common.object;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.cli.input.InputReader;
 import ru.askar.common.cli.output.OutputWriter;
@@ -16,20 +14,15 @@ public class Event implements Comparable<Event>, Serializable {
     private String description;
     private EventType eventType;
 
-    @JsonCreator
-    public Event(
-            @JsonProperty("id") Integer id,
-            @JsonProperty("name") String name,
-            @JsonProperty("description") String description,
-            @JsonProperty("eventType") EventType eventType) {
-        setId(id);
-        setName(name);
-        setDescription(description);
-        setEventType(eventType);
+    public Event(Integer id, String name, String description, EventType eventType) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.eventType = eventType;
     }
 
     private Event(Integer id) {
-        setId(id);
+        this.id = id;
     }
 
     /**
@@ -56,7 +49,7 @@ public class Event implements Comparable<Event>, Serializable {
             outputWriter.write("Введите название события: ");
             try {
                 name = inputReader.getInputString();
-                this.setName(name);
+                this.name = name;
             } catch (IllegalArgumentException e) {
                 name = null;
                 if (scriptMode) {
@@ -82,7 +75,7 @@ public class Event implements Comparable<Event>, Serializable {
             outputWriter.write("Введите описание события: ");
             try {
                 description = inputReader.getInputString();
-                this.setDescription(description);
+                this.description = description;
             } catch (IllegalArgumentException e) {
                 description = null;
                 if (scriptMode) {
@@ -108,7 +101,7 @@ public class Event implements Comparable<Event>, Serializable {
                         "Хотите ввести тип события? (y/n): "));
         String answer = inputReader.getInputString();
         if (answer != null && answer.equalsIgnoreCase("y")) {
-            setEventType(EventType.createEventType(outputWriter, inputReader, scriptMode));
+            this.eventType = EventType.createEventType(outputWriter, inputReader, scriptMode);
         }
     }
 

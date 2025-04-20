@@ -1,7 +1,5 @@
 package ru.askar.common.object;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.cli.input.InputReader;
 import ru.askar.common.cli.output.OutputWriter;
@@ -16,31 +14,26 @@ public class Ticket implements Comparable<Ticket>, Serializable {
     private Long id;
     private String name;
     private Coordinates coordinates;
-    private long price;
+    private Long price;
     private TicketType type;
     private Event event;
+    private Integer creatorId;
 
-    @JsonCreator
-    public Ticket(
-            @JsonProperty("id") Long id,
-            @JsonProperty("name") String name,
-            @JsonProperty("coordinates") Coordinates coordinates,
-            @JsonProperty("price") long price,
-            @JsonProperty("type") TicketType type,
-            @JsonProperty("event") Event event) {
-        setId(id);
-        setName(name);
-        setCoordinates(coordinates);
-        this.creationDate = LocalDateTime.now();
-        setPrice(price);
-        setType(type);
-        setEvent(event);
+    public Ticket(LocalDateTime creationDate, Long id, String name, Coordinates coordinates, Long price, TicketType type, Event event, Integer creatorId) {
+        this.creationDate = creationDate;
+        this.id = id;
+        this.name = name;
+        this.coordinates = coordinates;
+        this.price = price;
+        this.type = type;
+        this.event = event;
+        this.creatorId = creatorId;
     }
 
-    private Ticket(Long ticketId, String name, long price) {
-        setId(ticketId);
-        setName(name);
-        setPrice(price);
+    private Ticket(Long ticketId, String name, Long price) {
+        this.id = ticketId;
+        this.name = name;
+        this.price = price;
         this.creationDate = LocalDateTime.now();
     }
 
@@ -60,13 +53,13 @@ public class Ticket implements Comparable<Ticket>, Serializable {
             InputReader inputReader,
             Long ticketId,
             String name,
-            long price,
+            Long price,
             Integer eventId,
             boolean scriptMode)
             throws UserRejectedToFillFieldsException {
         Ticket ticket = new Ticket(ticketId, name, price);
-        ticket.setCoordinates(Coordinates.createCoordinates(outputWriter, inputReader, scriptMode));
-        ticket.setType(TicketType.createTicketType(outputWriter, inputReader, scriptMode));
+        ticket.coordinates = Coordinates.createCoordinates(outputWriter, inputReader, scriptMode);
+        ticket.type = TicketType.createTicketType(outputWriter, inputReader, scriptMode);
         ticket.requestEvent(outputWriter, inputReader, eventId, scriptMode);
         return ticket;
     }
@@ -78,7 +71,7 @@ public class Ticket implements Comparable<Ticket>, Serializable {
                 CommandResponseCode.WARNING.getColoredMessage("Хотите ввести событие? (y/n): "));
         String answer = inputReader.getInputString();
         if (answer != null && answer.equalsIgnoreCase("y")) {
-            this.setEvent(Event.createEvent(outputWriter, inputReader, eventId, scriptMode));
+            this.event = Event.createEvent(outputWriter, inputReader, eventId, scriptMode);
         }
     }
 
@@ -86,7 +79,7 @@ public class Ticket implements Comparable<Ticket>, Serializable {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Ticket ticket = (Ticket) o;
-        return price == ticket.price
+        return price.equals(ticket.price)
                 && Objects.equals(id, ticket.id)
                 && Objects.equals(name, ticket.name)
                 && Objects.equals(coordinates, ticket.coordinates)
@@ -136,6 +129,10 @@ public class Ticket implements Comparable<Ticket>, Serializable {
                 + ";";
     }
 
+    public LocalDateTime getCreationDate() {
+        return creationDate;
+    }
+
     public Long getId() {
         return id;
     }
@@ -160,15 +157,11 @@ public class Ticket implements Comparable<Ticket>, Serializable {
         this.coordinates = coordinates;
     }
 
-    public LocalDateTime getCreationDate() {
-        return creationDate;
-    }
-
-    public long getPrice() {
+    public Long getPrice() {
         return price;
     }
 
-    public void setPrice(long price) {
+    public void setPrice(Long price) {
         this.price = price;
     }
 
@@ -186,5 +179,13 @@ public class Ticket implements Comparable<Ticket>, Serializable {
 
     public void setEvent(Event event) {
         this.event = event;
+    }
+
+    public Integer getCreatorId() {
+        return creatorId;
+    }
+
+    public void setCreatorId(Integer creatorId) {
+        this.creatorId = creatorId;
     }
 }

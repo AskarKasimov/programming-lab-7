@@ -5,6 +5,8 @@ import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.exception.InvalidInputFieldException;
 import ru.askar.serverLab6.collection.CollectionManager;
 
+import static ru.askar.serverLab6.collection.CollectionManager.validateTicket;
+
 public class RemoveLowerCommand extends ObjectCollectionCommand {
     public RemoveLowerCommand(CollectionManager collectionManager) {
         super(
@@ -19,14 +21,8 @@ public class RemoveLowerCommand extends ObjectCollectionCommand {
         if (object == null)
             return new CommandResponse(
                     CommandResponseCode.ERROR, "Данной команде требуется объект!");
-        if (object.getId() == null) {
-            object.setId(collectionManager.generateNextTicketId());
-        }
-        if (object.getEvent() != null && object.getEvent().getId() == null) {
-            object.getEvent().setId(collectionManager.generateNextEventId());
-        }
         try {
-            collectionManager.validateTicket(object);
+            validateTicket(object);
         } catch (InvalidInputFieldException e) {
             return new CommandResponse(CommandResponseCode.ERROR, e.getMessage());
         }

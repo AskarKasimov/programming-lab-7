@@ -37,9 +37,6 @@ public class UpdateCommand extends ObjectCollectionCommand {
         if (collectionManager.getCollection().get(idToUpdate) == null) {
             return new CommandResponse(CommandResponseCode.ERROR, "Элемент с таким id не найден");
         }
-        if (object.getEvent() != null && object.getEvent().getId() == null) {
-            object.getEvent().setId(collectionManager.generateNextEventId());
-        }
         try {
             collectionManager.remove(idToUpdate);
             collectionManager.putWithValidation(object);

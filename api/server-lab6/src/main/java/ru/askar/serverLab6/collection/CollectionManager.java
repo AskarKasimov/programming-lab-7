@@ -1,17 +1,14 @@
 package ru.askar.serverLab6.collection;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
-import ru.askar.common.exception.InvalidCollectionFileException;
+import io.r2dbc.spi.Connection;
+import io.r2dbc.spi.ConnectionFactory;
+import reactor.core.publisher.Mono;
 import ru.askar.common.exception.InvalidInputFieldException;
-import ru.askar.common.object.Event;
-import ru.askar.common.object.Ticket;
+import ru.askar.common.object.*;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Objects;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
+import java.util.concurrent.Callable;
 
 /**
  * Manager для коллекции билетов.
@@ -19,75 +16,78 @@ import java.util.stream.Collectors;
 public class CollectionManager {
     private final LocalDateTime dateOfInitialization;
     private final TreeMap<Long, Ticket> collection = new TreeMap<>();
-    private final DataReader starterDataReader;
+    private final Mono<? extends Connection> connectionMono;
 
-    public CollectionManager(DataReader dataReader) throws InvalidInputFieldException, IOException {
+    public CollectionManager(ConnectionFactory connectionFactory) {
         this.dateOfInitialization = LocalDateTime.now();
-        if (dataReader == null) {
-            starterDataReader =
-                    new DataReader() {
-                        @Override
-                        public void readData() {
-                        }
-
-                        @Override
-                        public TreeMap<Long, Ticket> getData() {
-                            return new TreeMap<>();
-                        }
-
-                        @Override
-                        public String getSource() {
-                            return null;
-                        }
-                    };
-        } else starterDataReader = dataReader;
-        try {
-            starterDataReader.readData();
-        } catch (JsonMappingException e) {
-            Throwable cause = e.getCause();
-            if (cause != null) {
-                throw new InvalidInputFieldException(
-                        "Критическая ошибка поля структуры: " + cause.getMessage());
-            } else {
-                throw new IOException(
-                        "Неизвестная ошибка считывания данных из файла: " + e.getOriginalMessage());
-            }
-        } catch (InvalidCollectionFileException e) {
-            throw new InvalidCollectionFileException(
-                    "Критическая ошибка читаемого файла: " + e.getMessage());
-        } catch (IOException e) {
-            throw new IOException("Ошибка при чтении файла: " + e.getMessage());
-        }
-        for (Ticket ticket : starterDataReader.getData().values()) {
-            putWithValidation(ticket);
-        }
+        this.connectionMono = Mono.from(connectionFactory.create()).cache();
+        System.out.println("Загрузка билетов из базы данных...");
+        loadTicketsFromDatabase().block();
     }
 
-    public String getStarterSource() {
-        return starterDataReader.getSource();
-    }
+    private Mono<Void> loadTicketsFromDatabase() {
+        return connectionMono.flatMapMany(connection ->
+                        connection.createStatement("SELECT "
+                                        + "t.id AS ticket_id, "
+                                        + "t.name AS ticket_name, "
+                                        + "t.x, "
+                                        + "t.y, "
+                                        + "t.creation_date, "
+                                        + "t.price, "
+                                        + "t.ticket_type, "
+                                        + "t.event_id, "
+                                        + "e.id AS event_id, "
+                                        + "e.name AS event_name, "
+                                        + "e.description, "
+                                        + "e.event_type, "
+                                        + "u.id AS user_id "
+                                        + "FROM ticket t "
+                                        + "LEFT JOIN event e ON e.id = t.event_id "
+                                        + "JOIN users u ON u.id = t.creator_id")
+                                .execute()
+                )
+                .flatMap(result -> result.map((row, meta) -> {
+                    Coordinates coordinates = new Coordinates(
+                            row.get("x", Float.class),
+                            row.get("y", Float.class));
 
-    public Long generateNextTicketId() {
-        long min = 1;
-        while (collection.containsKey(min)) {
-            min++;
-        }
-        return min;
-    }
+                    Event event = null;
+                    Integer eventId = row.get("event_id", Integer.class);
+                    if (eventId != null) {
+                        event = new Event(eventId,
+                                row.get("event_name", String.class),
+                                row.get("description", String.class),
+                                EventType.valueOf(row.get("event_type", String.class)));
+                    }
 
-    public Integer generateNextEventId() {
-        Set<Integer> ids =
-                collection.values().stream()
-                        .map(Ticket::getEvent)
-                        .filter(Objects::nonNull)
-                        .map(Event::getId)
-                        .collect(Collectors.toSet());
-
-        int min = 1;
-        while (ids.contains(min)) {
-            min++;
-        }
-        return min;
+                    return new Ticket(
+                            row.get("creation_date", LocalDateTime.class),
+                            row.get("ticket_id", Long.class),
+                            row.get("ticket_name", String.class),
+                            coordinates,
+                            row.get("price", Long.class),
+                            TicketType.valueOf(row.get("ticket_type", String.class)),
+                            event,
+                            row.get("user_id", Integer.class));
+                }))
+                .doOnNext(ticket -> {
+                    try {
+                        validateTicket(ticket);
+                    } catch (InvalidInputFieldException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .onErrorResume(e -> {
+                    if (e.getCause() instanceof InvalidInputFieldException) {
+                        System.err.println("Некорректные данные в билете (не загружаю его): " + e.getCause().getMessage());
+                        return Mono.empty();
+                    }
+                    return Mono.error(e);
+                })
+                .then()
+                .doOnSuccess(__ -> {
+                    System.out.println("Загрузка билетов из базы данных завершена");
+                });
     }
 
     public LocalDateTime getDateOfCreation() {
@@ -107,21 +107,49 @@ public class CollectionManager {
         collection.remove(id);
     }
 
-    public void putWithValidation(Ticket ticket) throws InvalidInputFieldException {
-        validateTicket(ticket);
-        collection.put(ticket.getId(), ticket);
+    public Mono<Void> putWithValidation(Ticket ticket) {
+        Callable<Ticket> validationCallable = () -> {
+            validateTicket(ticket);
+            return ticket;
+        };
+        return Mono.fromCallable(validationCallable)
+                .flatMap(validatedTicket -> connectionMono.flatMap(conn ->
+                        Mono.from(conn.createStatement(
+                                                "INSERT INTO ticket (id, creator_id, name, x, y, creation_date, price, ticket_type, event_id) " +
+                                                        "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) " +
+                                                        "RETURNING id")
+                                        .bind(0, validatedTicket.getId())
+                                        .bind(1, validatedTicket.getCreatorId())
+                                        .bind(2, validatedTicket.getName())
+                                        .bind(3, validatedTicket.getCoordinates().getX())
+                                        .bind(4, validatedTicket.getCoordinates().getY())
+                                        .bind(5, validatedTicket.getCreationDate())
+                                        .bind(6, validatedTicket.getPrice())
+                                        .bind(7, validatedTicket.getType().toString())
+                                        .bind(8, validatedTicket.getEvent() != null ?
+                                                validatedTicket.getEvent().getId() : null)
+                                        .execute())
+                                .flatMap(result ->
+                                        Mono.from(result.map((row, meta) -> row.get("id", Long.class)))
+                                )
+                                .doOnNext(generatedId -> {
+                                    validatedTicket.setId(generatedId);
+                                    collection.put(generatedId, validatedTicket);
+                                })
+                                .then()
+                ))
+                .doOnSuccess(__ ->
+                        System.out.println("Билет сохранён. ID: " + ticket.getId())
+                )
+                .onErrorResume(e -> {
+                    System.err.println("Ошибка: " + e.getMessage());
+                    return Mono.error(e);
+                });
     }
 
-    public void validateTicket(Ticket object) throws InvalidInputFieldException {
-        // ticket id
-        if (object.getId() == null) {
-            throw new InvalidInputFieldException("Поле id не может быть null");
-        }
+    public static void validateTicket(Ticket object) throws InvalidInputFieldException {
         if (object.getId() < 1) {
             throw new InvalidInputFieldException("Поле id должно быть больше 0");
-        }
-        if (collection.containsKey(object.getId())) {
-            throw new InvalidInputFieldException("Элемент с таким id уже существует");
         }
         // ticket name
         if (object.getName() == null) {
@@ -163,13 +191,6 @@ public class CollectionManager {
             }
             if (object.getEvent().getId() < 1) {
                 throw new InvalidInputFieldException("Поле event.id должно быть больше 0");
-            }
-            if (collection.values().stream()
-                    .map(Ticket::getEvent)
-                    .map(Event::getId)
-                    .filter(Objects::nonNull)
-                    .anyMatch(id -> id.equals(object.getEvent().getId()))) {
-                throw new InvalidInputFieldException("Event с таким id уже существует");
             }
             // event name
             if (object.getEvent().getName() == null) {

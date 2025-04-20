@@ -1,7 +1,5 @@
 package ru.askar.common.object;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.cli.input.InputReader;
 import ru.askar.common.cli.output.OutputWriter;
@@ -15,10 +13,9 @@ public class Coordinates implements Serializable {
     private Float x;
     private Float y;
 
-    @JsonCreator
-    public Coordinates(@JsonProperty("x") BigDecimal x, @JsonProperty("y") BigDecimal y) {
-        setX(x);
-        setY(y);
+    public Coordinates(Float x, Float y) {
+        this.x = x;
+        this.y = y;
     }
 
     private Coordinates() {
@@ -48,7 +45,7 @@ public class Coordinates implements Serializable {
             outputWriter.write("Введите x: ");
             try {
                 x = inputReader.getInputBigDecimal();
-                this.setX(x);
+                this.x = x.floatValue();
             } catch (IllegalArgumentException e) {
                 x = null;
                 if (scriptMode) {
@@ -73,7 +70,7 @@ public class Coordinates implements Serializable {
             outputWriter.write("Введите y: ");
             try {
                 y = inputReader.getInputBigDecimal();
-                this.setY(y);
+                this.y = y.floatValue();
             } catch (IllegalArgumentException e) {
                 y = null;
                 if (scriptMode) {
@@ -112,27 +109,7 @@ public class Coordinates implements Serializable {
         return x;
     }
 
-    public void setX(BigDecimal x) {
-        float floatValue = x.floatValue();
-        BigDecimal restored = new BigDecimal(floatValue);
-        if (x.compareTo(restored) != 0) {
-            throw new IllegalArgumentException(
-                    "Число " + x + " нельзя адекватно запихнуть в Float");
-        }
-        this.x = x.floatValue();
-    }
-
     public Float getY() {
         return y;
-    }
-
-    public void setY(BigDecimal y) {
-        float floatValue = y.floatValue();
-        BigDecimal restored = new BigDecimal(floatValue);
-        if (y.compareTo(restored) != 0) {
-            throw new IllegalArgumentException(
-                    "Число " + y + " нельзя адекватно запихнуть в Float");
-        }
-        this.y = y.floatValue();
     }
 }
