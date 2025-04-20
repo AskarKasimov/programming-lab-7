@@ -15,19 +15,19 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class TcpServerHandler implements ServerHandler {
     private final CommandExecutor<CollectionCommand> collectionCommandExecutor;
     private final ArrayList<CommandAsList> commandList;
-    private final Map<SocketChannel, ConcurrentLinkedQueue<Object>> clientOutputQueues =
-            new ConcurrentHashMap<>();
+    private final ExecutorService requestReaderExecutor = Executors.newCachedThreadPool();
+    private final ExecutorService requestProcessorExecutor =
+            Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private final ExecutorService responseSenderExecutor = Executors.newCachedThreadPool();
     private int port = -1;
     private Selector selector;
-    private ServerSocketChannel serverChannel;
     private boolean running = false;
 
     public TcpServerHandler(
@@ -43,11 +43,10 @@ public class TcpServerHandler implements ServerHandler {
             throw new IllegalStateException("Порт не задан");
         }
         selector = Selector.open();
-        serverChannel = ServerSocketChannel.open();
+        ServerSocketChannel serverChannel = ServerSocketChannel.open();
         serverChannel.bind(new InetSocketAddress(this.port));
         serverChannel.configureBlocking(false);
         serverChannel.register(selector, SelectionKey.OP_ACCEPT);
-        clientOutputQueues.clear();
         running = true;
 
         new Thread(
@@ -56,13 +55,11 @@ public class TcpServerHandler implements ServerHandler {
                         while (running) {
                             selector.select(100);
                             processSelectedKeys();
-                            processOutputQueue();
                         }
                     } catch (Exception e) {
                         if (running) {
-                            System.out.println(
-                                    "Ошибка в потоке хэндлера: " + e.getMessage());
-                        } // а иначе тупо сервер оказался закрыт извне)))
+                            System.out.println("Ошибка в потоке хэндлера: " + e.getMessage());
+                        }
                     } finally {
                         closeResources();
                     }
@@ -92,7 +89,6 @@ public class TcpServerHandler implements ServerHandler {
         SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
         clientChannel.configureBlocking(false);
         clientChannel.register(selector, SelectionKey.OP_READ);
-        clientOutputQueues.put(clientChannel, new ConcurrentLinkedQueue<>());
         sendMessage(clientChannel, commandList);
         System.out.println("Клиент подключен: " + clientChannel.getRemoteAddress());
     }
@@ -135,7 +131,7 @@ public class TcpServerHandler implements ServerHandler {
             if (dto instanceof CommandToExecute command) {
                 System.out.println(
                         "Получена команда " + command + " от " + channel.getRemoteAddress());
-                processCommand(channel, command);
+                requestReaderExecutor.execute(() -> processCommand(channel, command));
             }
         } catch (Exception e) {
             System.out.println("Ошибка обработки команды: " + e.getMessage());
@@ -144,26 +140,28 @@ public class TcpServerHandler implements ServerHandler {
     }
 
     private void processCommand(SocketChannel channel, CommandToExecute command) {
-        try {
-            CollectionCommand calledCommand = collectionCommandExecutor.getCommand(command.name());
-            if (calledCommand != null) {
-                if (calledCommand instanceof ExitCommand) { // отлов намеренного дисконнекта клиента
-                    handleDisconnect(channel.keyFor(selector), channel);
-                    return;
+        requestProcessorExecutor.submit(() -> {
+            try {
+                CollectionCommand calledCommand = collectionCommandExecutor.getCommand(command.name());
+                if (calledCommand != null) {
+                    if (calledCommand instanceof ExitCommand) { // отлов намеренного дисконнекта клиента
+                        handleDisconnect(channel.keyFor(selector), channel);
+                        return;
+                    }
+                    if (calledCommand instanceof ObjectCollectionCommand) {
+                        ((ObjectCollectionCommand) calledCommand).setObject(command.object());
+                    }
+                    CommandResponse response = calledCommand.execute(command.args());
+                    sendMessage(channel, response);
+                } else {
+                    sendMessage(
+                            channel,
+                            new CommandResponse(CommandResponseCode.ERROR, "Команда не найдена"));
                 }
-                if (calledCommand instanceof ObjectCollectionCommand) {
-                    ((ObjectCollectionCommand) calledCommand).setObject(command.object());
-                }
-                CommandResponse response = calledCommand.execute(command.args());
-                sendMessage(channel, response);
-            } else {
-                sendMessage(
-                        channel,
-                        new CommandResponse(CommandResponseCode.ERROR, "Команда не найдена"));
+            } catch (Exception e) {
+                sendMessage(channel, new CommandResponse(CommandResponseCode.ERROR, e.getMessage()));
             }
-        } catch (Exception e) {
-            sendMessage(channel, new CommandResponse(CommandResponseCode.ERROR, e.getMessage()));
-        }
+        });
     }
 
     private void handleDisconnect(SelectionKey key, SocketChannel channel) {
@@ -181,53 +179,22 @@ public class TcpServerHandler implements ServerHandler {
         } catch (IOException ex) {
             System.out.println("Ошибка закрытия канала: " + ex.getMessage());
         }
-
-        clientOutputQueues.remove(channel);
         System.out.println("Клиент отключен: " + clientAddress);
-    }
-
-    private void processOutputQueue() {
-        Iterator<Map.Entry<SocketChannel, ConcurrentLinkedQueue<Object>>> iterator =
-                clientOutputQueues.entrySet().iterator();
-
-        while (iterator.hasNext()) {
-            Map.Entry<SocketChannel, ConcurrentLinkedQueue<Object>> entry = iterator.next();
-            SocketChannel channel = entry.getKey();
-            ConcurrentLinkedQueue<Object> queue = entry.getValue();
-
-            try {
-                if (!channel.isOpen()) {
-                    iterator.remove();
-                    continue;
-                }
-
-                while (!queue.isEmpty()) {
-                    Object message = queue.poll();
-                    ByteBuffer data = serialize(message);
-                    ByteBuffer header = ByteBuffer.allocate(4).putInt(data.limit()).flip();
-
-                    if (channel.write(new ByteBuffer[]{header, data}) == 0) {
-                        queue.offer(message);
-                        break;
-                    }
-                }
-            } catch (IOException | CancelledKeyException e) {
-                iterator.remove();
-                try {
-                    channel.close();
-                } catch (IOException ex) {
-                    // Игнорируем ошибку закрытия
-                }
-            }
-        }
     }
 
     @Override
     public void sendMessage(SocketChannel channel, Object message) {
-        ConcurrentLinkedQueue<Object> queue = clientOutputQueues.get(channel);
-        if (queue != null) {
-            queue.add(message);
-        }
+        responseSenderExecutor.execute(() -> {
+            synchronized (channel) { // Синхронизация на уровне канала
+                try {
+                    ByteBuffer data = serialize(message);
+                    ByteBuffer header = ByteBuffer.allocate(4).putInt(data.limit()).flip();
+                    channel.write(new ByteBuffer[]{header, data});
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 
     private ByteBuffer serialize(Object dto) throws IOException {
@@ -249,27 +216,18 @@ public class TcpServerHandler implements ServerHandler {
     }
 
     private void closeResources() {
+        if (!running) return;
         running = false;
         try {
-            for (SocketChannel channel : clientOutputQueues.keySet()) {
-                try {
-                    if (channel.isOpen()) {
-                        channel.close();
-                    }
-                } catch (IOException e) {
-                    // Игнорируем ошибку закрытия
-                }
+            requestReaderExecutor.shutdown();
+            requestProcessorExecutor.shutdown();
+            responseSenderExecutor.shutdown();
+            for (SelectionKey selectionKey : selector.keys()) {
+                selectionKey.channel().close();
             }
-            clientOutputQueues.clear();
-
-            if (serverChannel != null) {
-                serverChannel.close();
-            }
-            if (selector != null) {
-                selector.close();
-            }
+            selector.close();
         } catch (IOException e) {
-            System.err.println("Ошибка при закрытии ресурсов: " + e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 

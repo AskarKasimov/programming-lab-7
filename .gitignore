@@ -5,3 +5,4 @@ target/
 script*
 .env
 postgres_data/
+insert_data.sql
