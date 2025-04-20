@@ -5,6 +5,8 @@ import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.exception.InvalidInputFieldException;
 import ru.askar.serverLab6.collection.CollectionManager;
 
+import java.sql.SQLException;
+
 public class UpdateCommand extends ObjectCollectionCommand {
     public UpdateCommand(CollectionManager collectionManager) {
         super(
@@ -37,13 +39,10 @@ public class UpdateCommand extends ObjectCollectionCommand {
         if (collectionManager.getCollection().get(idToUpdate) == null) {
             return new CommandResponse(CommandResponseCode.ERROR, "Элемент с таким id не найден");
         }
-        if (object.getEvent() != null && object.getEvent().getId() == null) {
-            object.getEvent().setId(collectionManager.generateNextEventId());
-        }
         try {
             collectionManager.remove(idToUpdate);
             collectionManager.putWithValidation(object);
-        } catch (InvalidInputFieldException e) {
+        } catch (InvalidInputFieldException | SQLException e) {
             return new CommandResponse(CommandResponseCode.ERROR, e.getMessage());
         }
         return new CommandResponse(CommandResponseCode.SUCCESS, "Элемент заменён");

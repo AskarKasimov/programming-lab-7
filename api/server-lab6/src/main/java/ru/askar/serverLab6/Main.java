@@ -7,62 +7,73 @@ import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.cli.input.InputReader;
 import ru.askar.common.cli.output.OutputWriter;
 import ru.askar.common.cli.output.Stdout;
+import ru.askar.common.exception.InvalidInputFieldException;
 import ru.askar.serverLab6.collection.CollectionManager;
-import ru.askar.serverLab6.collection.DataReader;
-import ru.askar.serverLab6.collection.JsonReader;
 import ru.askar.serverLab6.collectionCommand.*;
 import ru.askar.serverLab6.connection.ServerHandler;
 import ru.askar.serverLab6.connection.TcpServerHandler;
 import ru.askar.serverLab6.serverCommand.*;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class Main {
 
     public static void main(String[] args) {
-        String filePath = System.getenv("COLLECTION_PATH");
-        if (filePath == null) {
+        String dbHost = System.getenv("DB_HOST");
+        if (dbHost == null) {
+            dbHost = "localhost";
+        }
+        String dbPort = System.getenv("DB_PORT");
+        if (dbPort == null) {
             System.out.println(
-                    CommandResponseCode.ERROR.getColoredMessage(
-                            "Переменная окружения COLLECTION_PATH не установлена"));
+                    CommandResponseCode.ERROR.getColoredMessage("Не задан порт БД!"));
             return;
         }
-        System.out.println(CommandResponseCode.INFO.getColoredMessage("Файл: " + filePath));
-        BufferedInputStream bufferedInputStream = null;
+        int dbPortInteger;
         try {
-            bufferedInputStream = new BufferedInputStream(new FileInputStream(filePath));
-        } catch (FileNotFoundException | SecurityException e) {
+            dbPortInteger = Integer.parseInt(dbPort);
+        } catch (NumberFormatException e) {
             System.out.println(
-                    CommandResponseCode.ERROR.getColoredMessage(
-                            "Файл не удаётся прочитать: " + e.getMessage()));
+                    CommandResponseCode.ERROR.getColoredMessage("Порт БД должен быть числом!"));
+            return;
         }
-
-        DataReader dataReader = new JsonReader(filePath, bufferedInputStream);
-        if (bufferedInputStream == null) {
-            dataReader = null;
+        String dbUser = System.getenv("DB_USER");
+        if (dbUser == null) {
+            System.out.println(
+                    CommandResponseCode.ERROR.getColoredMessage("Не задан пользователь БД!"));
+            return;
         }
-
-        CollectionManager collectionManager = null;
+        String dbName = System.getenv("DB_NAME");
+        if (dbName == null) {
+            System.out.println(
+                    CommandResponseCode.ERROR.getColoredMessage("Не задана БД!"));
+            return;
+        }
+        String dbPassword = System.getenv("DB_PASSWORD");
+        if (dbPassword == null) {
+            System.out.println(
+                    CommandResponseCode.ERROR.getColoredMessage("Не задан пароль БД!"));
+            return;
+        }
+        CollectionManager collectionManager;
         try {
-            collectionManager = new CollectionManager(dataReader);
-        } catch (Exception e) {
-            System.out.println(CommandResponseCode.ERROR.getColoredMessage(e.getMessage()));
-        } finally {
-            try {
-                if (bufferedInputStream != null) bufferedInputStream.close();
-            } catch (IOException e) {
-                System.out.println(
-                        CommandResponseCode.ERROR.getColoredMessage(
-                                "Ошибка при закрытии файла: " + e.getMessage()));
-            }
-        }
-        if (collectionManager == null) {
-            try {
-                collectionManager = new CollectionManager(null);
-            } catch (Exception e) {
-                // ignored
-            }
+            collectionManager = new CollectionManager(DriverManager.getConnection("jdbc:postgresql://"
+                            + dbHost
+                            + ":"
+                            + dbPort
+                            + "/"
+                            + dbName,
+                    dbUser,
+                    dbPassword));
+        } catch (InvalidInputFieldException | SQLException | IOException e) {
+            System.out.println(
+                    CommandResponseCode.ERROR.getColoredMessage("Ошибка инициализации коллекции: " + e.getMessage()));
+            return;
         }
         if (collectionManager.getCollection().isEmpty()) {
             System.out.println(CommandResponseCode.WARNING.getColoredMessage("Коллекция пуста"));

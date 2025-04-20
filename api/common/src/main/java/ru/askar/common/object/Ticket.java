@@ -1,7 +1,5 @@
 package ru.askar.common.object;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.cli.input.InputReader;
 import ru.askar.common.cli.output.OutputWriter;
@@ -19,22 +17,16 @@ public class Ticket implements Comparable<Ticket>, Serializable {
     private long price;
     private TicketType type;
     private Event event;
+    private Integer creatorId;
 
-    @JsonCreator
-    public Ticket(
-            @JsonProperty("id") Long id,
-            @JsonProperty("name") String name,
-            @JsonProperty("coordinates") Coordinates coordinates,
-            @JsonProperty("price") long price,
-            @JsonProperty("type") TicketType type,
-            @JsonProperty("event") Event event) {
-        setId(id);
-        setName(name);
-        setCoordinates(coordinates);
-        this.creationDate = LocalDateTime.now();
-        setPrice(price);
-        setType(type);
-        setEvent(event);
+    public Ticket(LocalDateTime creationDate, Long id, String name, Coordinates coordinates, long price, TicketType type, Event event) {
+        this.creationDate = creationDate;
+        this.id = id;
+        this.name = name;
+        this.coordinates = coordinates;
+        this.price = price;
+        this.type = type;
+        this.event = event;
     }
 
     private Ticket(Long ticketId, String name, long price) {
@@ -136,6 +128,10 @@ public class Ticket implements Comparable<Ticket>, Serializable {
                 + ";";
     }
 
+    public LocalDateTime getCreationDate() {
+        return creationDate;
+    }
+
     public Long getId() {
         return id;
     }
@@ -160,10 +156,6 @@ public class Ticket implements Comparable<Ticket>, Serializable {
         this.coordinates = coordinates;
     }
 
-    public LocalDateTime getCreationDate() {
-        return creationDate;
-    }
-
     public long getPrice() {
         return price;
     }
@@ -186,5 +178,13 @@ public class Ticket implements Comparable<Ticket>, Serializable {
 
     public void setEvent(Event event) {
         this.event = event;
+    }
+
+    public Integer getCreatorId() {
+        return creatorId;
+    }
+
+    public void setCreatorId(Integer creatorId) {
+        this.creatorId = creatorId;
     }
 }

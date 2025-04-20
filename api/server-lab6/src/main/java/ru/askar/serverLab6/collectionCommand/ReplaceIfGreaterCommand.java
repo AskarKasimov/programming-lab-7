@@ -6,6 +6,8 @@ import ru.askar.common.exception.InvalidInputFieldException;
 import ru.askar.common.object.Ticket;
 import ru.askar.serverLab6.collection.CollectionManager;
 
+import java.sql.SQLException;
+
 public class ReplaceIfGreaterCommand extends ObjectCollectionCommand {
     public ReplaceIfGreaterCommand(CollectionManager collectionManager) {
         super(
@@ -39,10 +41,10 @@ public class ReplaceIfGreaterCommand extends ObjectCollectionCommand {
             try {
                 collectionManager.remove(object.getId());
                 collectionManager.putWithValidation(object);
-            } catch (InvalidInputFieldException e) {
+            } catch (InvalidInputFieldException | SQLException e) {
                 try {
                     collectionManager.putWithValidation(oldTicket);
-                } catch (InvalidInputFieldException ignored) {
+                } catch (InvalidInputFieldException | SQLException ignored) {
                     // такого не может быть:))
                 }
                 return new CommandResponse(CommandResponseCode.ERROR, e.getMessage());

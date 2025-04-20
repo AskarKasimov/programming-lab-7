@@ -19,12 +19,6 @@ public class RemoveLowerCommand extends ObjectCollectionCommand {
         if (object == null)
             return new CommandResponse(
                     CommandResponseCode.ERROR, "Данной команде требуется объект!");
-        if (object.getId() == null) {
-            object.setId(collectionManager.generateNextTicketId());
-        }
-        if (object.getEvent() != null && object.getEvent().getId() == null) {
-            object.getEvent().setId(collectionManager.generateNextEventId());
-        }
         try {
             collectionManager.validateTicket(object);
         } catch (InvalidInputFieldException e) {
