@@ -24,7 +24,7 @@ public class CollectionManager {
 
     public static void validateTicket(Ticket object) throws InvalidInputFieldException {
         // ticket id
-        if (object.getId() < 1) {
+        if (object.getId() != null && object.getId() < 1) {
             throw new InvalidInputFieldException("Поле id должно быть больше 0");
         }
         // ticket name
@@ -144,22 +144,33 @@ public class CollectionManager {
     }
 
     public void putWithValidation(Ticket ticket) throws InvalidInputFieldException, SQLException {
-
         validateTicket(ticket);
 
-        String sql = "INSERT INTO ticket (id, creator_id, name, x, y, creation_date, price, ticket_type, event_id) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        boolean idIsNull = (ticket.getId() == null);
+        String sql;
+        if (idIsNull) {
+            sql = "INSERT INTO ticket (creator_id, name, x, y, creation_date, price, ticket_type, event_id) VALUES (?, ?, ?, ?, ?, ?, ?::TicketType, ?)";
+        } else {
+            sql = "INSERT INTO ticket (id, creator_id, name, x, y, creation_date, price, ticket_type, event_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?::TicketType, ?)";
+        }
+
 
         try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setLong(1, ticket.getId());
-            stmt.setInt(2, ticket.getCreatorId());
-            stmt.setString(3, ticket.getName());
-            stmt.setFloat(4, ticket.getCoordinates().getX());
-            stmt.setFloat(5, ticket.getCoordinates().getY());
-            stmt.setTimestamp(6, Timestamp.valueOf(ticket.getCreationDate()));
-            stmt.setLong(7, ticket.getPrice());
-            stmt.setString(8, ticket.getType().toString());
-            stmt.setObject(9, ticket.getEvent() != null ? ticket.getEvent().getId() : null);
+            int paramIndex = 1;
+
+            if (!idIsNull) {
+                stmt.setLong(paramIndex++, ticket.getId());
+            }
+            if (ticket.getCreatorId() == null) stmt.setNull(paramIndex++, Types.INTEGER);
+            else
+                stmt.setInt(paramIndex++, ticket.getCreatorId());
+            stmt.setString(paramIndex++, ticket.getName());
+            stmt.setFloat(paramIndex++, ticket.getCoordinates().getX());
+            stmt.setFloat(paramIndex++, ticket.getCoordinates().getY());
+            stmt.setTimestamp(paramIndex++, Timestamp.valueOf(ticket.getCreationDate()));
+            stmt.setLong(paramIndex++, ticket.getPrice());
+            stmt.setString(paramIndex++, ticket.getType().toString());
+            stmt.setObject(paramIndex, ticket.getEvent() != null ? ticket.getEvent().getId() : null);
 
             int affectedRows = stmt.executeUpdate();
 
@@ -167,14 +178,16 @@ public class CollectionManager {
                 try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
                     synchronized (collection) {
                         if (generatedKeys.next()) {
-                            ticket.setId(generatedKeys.getLong(1));
-                            collection.put(ticket.getId(), ticket);
+                            long newId = generatedKeys.getLong(1);
+                            ticket.setId(newId);
+                            collection.put(newId, ticket);
                         }
                     }
                 }
             }
         }
     }
+
 
     public LocalDateTime getDateOfCreation() {
         return dateOfInitialization;

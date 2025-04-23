@@ -20,13 +20,13 @@ CREATE TYPE TicketType AS ENUM ('VIP', 'USUAL', 'BUDGETARY', 'CHEAP');
 CREATE TABLE Ticket
 (
     id            SERIAL PRIMARY KEY CHECK ( id > 0 ),
-    creator_id    INT        NOT NULL REFERENCES Users (id),
     name          TEXT       NOT NULL,
     x             FLOAT      NOT NULL,
     y             FLOAT      NOT NULL CHECK ( y <= 654.00 ),
     creation_date TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    price         FLOAT      NOT NULL CHECK ( price > 0.00 ),
     ticket_type   TicketType NOT NULL,
+    price         FLOAT      NOT NULL CHECK ( price > 0.00 ),
+    creator_id    INT REFERENCES Users (id),
     event_id      int REFERENCES Event (id)
 );
 

@@ -25,10 +25,7 @@ public class CommandWithMiddleware<T extends Command> extends Command {
             return middleware.handle(
                     original,
                     args,
-                    (cmd, a) -> {
-                        currentMiddleware = 0; // Сброс для следующего вызова
-                        return execute(a);
-                    }
+                    (cmd, a) -> execute(a)
             );
         }
         currentMiddleware = 0; // Сброс цепочки
