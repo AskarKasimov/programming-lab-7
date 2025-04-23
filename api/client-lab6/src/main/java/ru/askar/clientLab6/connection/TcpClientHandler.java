@@ -8,6 +8,7 @@ import ru.askar.common.CommandResponse;
 import ru.askar.common.cli.CommandExecutor;
 import ru.askar.common.cli.CommandParser;
 import ru.askar.common.cli.CommandResponseCode;
+import ru.askar.common.cli.CommandWithMiddleware;
 import ru.askar.common.cli.input.InputReader;
 
 import java.io.*;
@@ -21,11 +22,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class TcpClientHandler implements ClientHandler {
-    private final InputReader inputReader; // основной InputReader
-    private final CommandExecutor<ClientCommand> commandExecutor;
+    private final InputReader<ClientCommand> inputReader; // основной InputReader
+    private final CommandExecutor commandExecutor;
     private final ConcurrentLinkedQueue<Object> outputQueue = new ConcurrentLinkedQueue<>();
     private final int maxDepth = 3;
-    private final List<ClientCommand> originalCommands = new ArrayList<>();
+    private final List<CommandWithMiddleware<ClientCommand>> originalCommands = new ArrayList<>();
     private String host = "";
     private int port = -1;
     private Selector selector;
@@ -33,10 +34,10 @@ public class TcpClientHandler implements ClientHandler {
     private volatile boolean running = false;
     private int depth = 0;
     // Для вложенного режима
-    private InputReader nestedInputReader = null;
+    private InputReader<ClientGenericCommand> nestedInputReader = null;
 
     public TcpClientHandler(
-            InputReader inputReader, CommandExecutor<ClientCommand> commandExecutor) {
+            InputReader<ClientCommand> inputReader, CommandExecutor<ClientCommand> commandExecutor) {
         this.inputReader = inputReader;
         this.commandExecutor = commandExecutor;
     }
@@ -150,7 +151,7 @@ public class TcpClientHandler implements ClientHandler {
                         if (nestedInputReader == null) {
                             commandExecutor.clearCommands();
                             nestedInputReader =
-                                    new InputReader(
+                                    new InputReader<ClientGenericCommand>(
                                             commandExecutor,
                                             new CommandParser(),
                                             inputReader.getBufferedReader());
@@ -214,9 +215,7 @@ public class TcpClientHandler implements ClientHandler {
                             CommandResponseCode.WARNING.getColoredMessage(
                                     "Отключение от сервера. Возврат к локальному режиму."));
             commandExecutor.clearCommands();
-            for (ClientCommand command : originalCommands) {
-                commandExecutor.register(command);
-            }
+            originalCommands.forEach(command -> commandExecutor.register(command.getOriginalCommand()));
             nestedInputReader = null;
         }
 

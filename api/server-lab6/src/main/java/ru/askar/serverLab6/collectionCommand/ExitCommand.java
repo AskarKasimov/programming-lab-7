@@ -1,6 +1,7 @@
 package ru.askar.serverLab6.collectionCommand;
 
 import ru.askar.common.CommandResponse;
+import ru.askar.serverLab6.ClientDisconnectException;
 
 public class ExitCommand extends CollectionCommand {
     public ExitCommand() {
@@ -9,6 +10,6 @@ public class ExitCommand extends CollectionCommand {
 
     @Override
     public CommandResponse execute(String[] args) {
-        return null; // отлов вызова этой команды в ServerHandler
+        throw new ClientDisconnectException();
     }
 }

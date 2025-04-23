@@ -1,10 +1,7 @@
 package ru.askar.common.cli.input;
 
 import ru.askar.common.CommandResponse;
-import ru.askar.common.cli.CommandExecutor;
-import ru.askar.common.cli.CommandParser;
-import ru.askar.common.cli.CommandResponseCode;
-import ru.askar.common.cli.ParsedCommand;
+import ru.askar.common.cli.*;
 import ru.askar.common.exception.ExitCLIException;
 import ru.askar.common.exception.InvalidCommandException;
 import ru.askar.common.exception.NoSuchCommandException;
@@ -13,11 +10,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.math.BigDecimal;
 
-public class InputReader {
+public class InputReader<T extends Command> {
     /**
      * Класс, ответственный за чтение ввода от пользователя и исполнение команд.
      */
-    private final CommandExecutor commandExecutor;
+    private final CommandExecutor<T> commandExecutor;
 
     private final CommandParser commandParser;
     private boolean scriptMode = false;
@@ -29,7 +26,7 @@ public class InputReader {
      * @param bufferedReader  - класс для чтения ввода.
      */
     public InputReader(
-            CommandExecutor commandExecutor,
+            CommandExecutor<T> commandExecutor,
             CommandParser commandParser,
             BufferedReader bufferedReader) {
         this.commandExecutor = commandExecutor;
@@ -107,31 +104,17 @@ public class InputReader {
                             .write(CommandResponseCode.ERROR.getColoredMessage(e.getMessage()));
                     continue;
                 }
-                if (parsedCommand.args().length
-                        != commandExecutor.getCommand(parsedCommand.name()).getArgsCount()) {
-                    commandExecutor
-                            .getOutputWriter()
-                            .write(
-                                    CommandResponseCode.ERROR.getColoredMessage(
-                                            "Неверное количество аргументов: для команды "
-                                                    + parsedCommand.name()
-                                                    + " требуется "
-                                                    + commandExecutor
-                                                    .getCommand(parsedCommand.name())
-                                                    .getArgsCount()));
-                    continue;
-                }
+                commandExecutor.validateCommand(parsedCommand.name(), parsedCommand.args().length);
                 CommandResponse commandResponse =
                         commandExecutor
-                                .getCommand(parsedCommand.name())
-                                .execute(parsedCommand.args());
+                                .execute(parsedCommand.name(), parsedCommand.args());
                 commandExecutor
                         .getOutputWriter()
                         .write(
                                 commandResponse
                                         .code()
                                         .getColoredMessage(commandResponse.response()));
-            } catch (NoSuchCommandException e) {
+            } catch (IllegalArgumentException | NoSuchCommandException e) {
                 commandExecutor
                         .getOutputWriter()
                         .write(CommandResponseCode.ERROR.getColoredMessage(e.getMessage()));

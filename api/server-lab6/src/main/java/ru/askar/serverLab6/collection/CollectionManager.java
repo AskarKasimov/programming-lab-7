@@ -22,6 +22,70 @@ public class CollectionManager {
         loadTicketsFromDatabase();
     }
 
+    public static void validateTicket(Ticket object) throws InvalidInputFieldException {
+        // ticket id
+        if (object.getId() < 1) {
+            throw new InvalidInputFieldException("Поле id должно быть больше 0");
+        }
+        // ticket name
+        if (object.getName() == null) {
+            throw new InvalidInputFieldException("Поле name не может быть null");
+        }
+        if (object.getName().isEmpty()) {
+            throw new InvalidInputFieldException("Поле name не может быть пустым");
+        }
+        // ticket coordinates
+        if (object.getCoordinates() == null) {
+            throw new InvalidInputFieldException("Поле coordinates не может быть null");
+        }
+        if (object.getCoordinates().getX() == null) {
+            throw new InvalidInputFieldException("Поле coordinates.x не может быть null");
+        }
+        if (object.getCoordinates().getY() == null) {
+            throw new InvalidInputFieldException("Поле coordinates.y не может быть null");
+        }
+        if (object.getCoordinates().getY() > 654) {
+            throw new InvalidInputFieldException("Поле coordinates.y не может быть больше 654");
+        }
+        // ticket creationDate
+        if (object.getCreationDate() == null) {
+            throw new InvalidInputFieldException("Поле creationDate не может быть null");
+        }
+        // ticket price
+        if (object.getPrice() < 1) {
+            throw new InvalidInputFieldException("Поле price должно быть больше 0");
+        }
+        // ticket type
+        if (object.getType() == null) {
+            throw new InvalidInputFieldException("Поле type не может быть null");
+        }
+        // ticket event
+        if (object.getEvent() != null) {
+            // event id
+            if (object.getEvent().getId() == null) {
+                throw new InvalidInputFieldException("Поле event.id не может быть null");
+            }
+            if (object.getEvent().getId() < 1) {
+                throw new InvalidInputFieldException("Поле event.id должно быть больше 0");
+            }
+            // event name
+            if (object.getEvent().getName() == null) {
+                throw new InvalidInputFieldException("Поле event.name не может быть null");
+            }
+            if (object.getEvent().getName().isEmpty()) {
+                throw new InvalidInputFieldException("Поле event.name не может быть пустым");
+            }
+            // event description
+            if (object.getEvent().getDescription() == null) {
+                throw new InvalidInputFieldException("Поле event.description не может быть null");
+            }
+            if (object.getEvent().getDescription().length() > 1573) {
+                throw new InvalidInputFieldException(
+                        "Поле event.description не может быть больше 1573");
+            }
+        }
+    }
+
     private void loadTicketsFromDatabase() {
         String sql = "SELECT "
                 + "t.id AS ticket_id, "
@@ -132,70 +196,6 @@ public class CollectionManager {
     public void remove(Long id) {
         synchronized (collection) {
             collection.remove(id);
-        }
-    }
-
-    public static void validateTicket(Ticket object) throws InvalidInputFieldException {
-        // ticket id
-        if (object.getId() < 1) {
-            throw new InvalidInputFieldException("Поле id должно быть больше 0");
-        }
-        // ticket name
-        if (object.getName() == null) {
-            throw new InvalidInputFieldException("Поле name не может быть null");
-        }
-        if (object.getName().isEmpty()) {
-            throw new InvalidInputFieldException("Поле name не может быть пустым");
-        }
-        // ticket coordinates
-        if (object.getCoordinates() == null) {
-            throw new InvalidInputFieldException("Поле coordinates не может быть null");
-        }
-        if (object.getCoordinates().getX() == null) {
-            throw new InvalidInputFieldException("Поле coordinates.x не может быть null");
-        }
-        if (object.getCoordinates().getY() == null) {
-            throw new InvalidInputFieldException("Поле coordinates.y не может быть null");
-        }
-        if (object.getCoordinates().getY() > 654) {
-            throw new InvalidInputFieldException("Поле coordinates.y не может быть больше 654");
-        }
-        // ticket creationDate
-        if (object.getCreationDate() == null) {
-            throw new InvalidInputFieldException("Поле creationDate не может быть null");
-        }
-        // ticket price
-        if (object.getPrice() < 1) {
-            throw new InvalidInputFieldException("Поле price должно быть больше 0");
-        }
-        // ticket type
-        if (object.getType() == null) {
-            throw new InvalidInputFieldException("Поле type не может быть null");
-        }
-        // ticket event
-        if (object.getEvent() != null) {
-            // event id
-            if (object.getEvent().getId() == null) {
-                throw new InvalidInputFieldException("Поле event.id не может быть null");
-            }
-            if (object.getEvent().getId() < 1) {
-                throw new InvalidInputFieldException("Поле event.id должно быть больше 0");
-            }
-            // event name
-            if (object.getEvent().getName() == null) {
-                throw new InvalidInputFieldException("Поле event.name не может быть null");
-            }
-            if (object.getEvent().getName().isEmpty()) {
-                throw new InvalidInputFieldException("Поле event.name не может быть пустым");
-            }
-            // event description
-            if (object.getEvent().getDescription() == null) {
-                throw new InvalidInputFieldException("Поле event.description не может быть null");
-            }
-            if (object.getEvent().getDescription().length() > 1573) {
-                throw new InvalidInputFieldException(
-                        "Поле event.description не может быть больше 1573");
-            }
         }
     }
 }

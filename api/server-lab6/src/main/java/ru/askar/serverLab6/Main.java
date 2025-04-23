@@ -34,14 +34,6 @@ public class Main {
                     CommandResponseCode.ERROR.getColoredMessage("Не задан порт БД!"));
             return;
         }
-        int dbPortInteger;
-        try {
-            dbPortInteger = Integer.parseInt(dbPort);
-        } catch (NumberFormatException e) {
-            System.out.println(
-                    CommandResponseCode.ERROR.getColoredMessage("Порт БД должен быть числом!"));
-            return;
-        }
         String dbUser = System.getenv("DB_USER");
         if (dbUser == null) {
             System.out.println(
@@ -79,7 +71,7 @@ public class Main {
             System.out.println(CommandResponseCode.WARNING.getColoredMessage("Коллекция пуста"));
         }
         ArrayList<CommandAsList> commandList = new ArrayList<>();
-        CommandExecutor<CollectionCommand> collectionCommandExecutor = new CommandExecutor<>();
+        CollectionCommandExecutor collectionCommandExecutor = new CollectionCommandExecutor();
 
         ServerHandler serverHandler = new TcpServerHandler(collectionCommandExecutor, commandList);
         collectionCommandExecutor.register(new HelpCommand(collectionCommandExecutor));
@@ -101,7 +93,7 @@ public class Main {
                 .getAllCommands()
                 .forEach(
                         (name, command) -> {
-                            if (command instanceof ObjectCollectionCommand)
+                            if (command.getOriginalCommand() instanceof ObjectCollectionCommand)
                                 commandList.add(
                                         new CommandAsList(
                                                 command.getName(), command.getArgsCount(), true));
@@ -117,8 +109,8 @@ public class Main {
         CommandParser commandParser = new CommandParser();
 
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
-        InputReader inputReader =
-                new InputReader(serverCommandExecutor, commandParser, bufferedReader);
+        InputReader<ServerCommand> inputReader =
+                new InputReader<>(serverCommandExecutor, commandParser, bufferedReader);
 
         serverCommandExecutor.register(new ServerStartCommand(serverHandler));
         serverCommandExecutor.register(new ServerStatusCommand(serverHandler));

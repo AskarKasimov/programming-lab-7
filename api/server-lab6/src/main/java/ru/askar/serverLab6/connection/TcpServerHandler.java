@@ -3,11 +3,9 @@ package ru.askar.serverLab6.connection;
 import ru.askar.common.CommandAsList;
 import ru.askar.common.CommandResponse;
 import ru.askar.common.CommandToExecute;
-import ru.askar.common.cli.CommandExecutor;
 import ru.askar.common.cli.CommandResponseCode;
-import ru.askar.serverLab6.collectionCommand.CollectionCommand;
-import ru.askar.serverLab6.collectionCommand.ExitCommand;
-import ru.askar.serverLab6.collectionCommand.ObjectCollectionCommand;
+import ru.askar.serverLab6.ClientDisconnectException;
+import ru.askar.serverLab6.CollectionCommandExecutor;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -20,7 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class TcpServerHandler implements ServerHandler {
-    private final CommandExecutor<CollectionCommand> collectionCommandExecutor;
+    private final CollectionCommandExecutor collectionCommandExecutor;
     private final ArrayList<CommandAsList> commandList;
     private final ExecutorService requestReaderExecutor = Executors.newCachedThreadPool();
     private final ExecutorService requestProcessorExecutor =
@@ -31,7 +29,7 @@ public class TcpServerHandler implements ServerHandler {
     private boolean running = false;
 
     public TcpServerHandler(
-            CommandExecutor<CollectionCommand> commandExecutor,
+            CollectionCommandExecutor commandExecutor,
             ArrayList<CommandAsList> commandList) {
         this.collectionCommandExecutor = commandExecutor;
         this.commandList = commandList;
@@ -142,22 +140,11 @@ public class TcpServerHandler implements ServerHandler {
     private void processCommand(SocketChannel channel, CommandToExecute command) {
         requestProcessorExecutor.submit(() -> {
             try {
-                CollectionCommand calledCommand = collectionCommandExecutor.getCommand(command.name());
-                if (calledCommand != null) {
-                    if (calledCommand instanceof ExitCommand) { // отлов намеренного дисконнекта клиента
-                        handleDisconnect(channel.keyFor(selector), channel);
-                        return;
-                    }
-                    if (calledCommand instanceof ObjectCollectionCommand) {
-                        ((ObjectCollectionCommand) calledCommand).setObject(command.object());
-                    }
-                    CommandResponse response = calledCommand.execute(command.args());
-                    sendMessage(channel, response);
-                } else {
-                    sendMessage(
-                            channel,
-                            new CommandResponse(CommandResponseCode.ERROR, "Команда не найдена"));
-                }
+                collectionCommandExecutor.validateCommand(command.name(), command.args().length);
+                CommandResponse response = collectionCommandExecutor.execute(command.name(), command.args(), command.object());
+                sendMessage(channel, response);
+            } catch (ClientDisconnectException e) {
+                handleDisconnect(channel.keyFor(selector), channel);
             } catch (Exception e) {
                 sendMessage(channel, new CommandResponse(CommandResponseCode.ERROR, e.getMessage()));
             }
