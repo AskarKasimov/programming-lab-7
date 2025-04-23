@@ -56,7 +56,10 @@ public class CommandExecutor<T extends Command> {
         try {
             command = commands.get(commandName);
         } catch (NullPointerException e) {
-            throw new NoSuchCommandException("Неизвестная команда: " + commandName);
+            throw new NoSuchCommandException(commandName);
+        }
+        if (command == null) {
+            throw new NoSuchCommandException(commandName);
         }
         if (argsCount != command.getArgsCount()) {
             throw new IllegalArgumentException(
