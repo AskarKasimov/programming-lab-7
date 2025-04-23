@@ -4,6 +4,8 @@ import ru.askar.common.CommandResponse;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.serverLab6.collection.CollectionManager;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class RemoveGreaterKeyCommand extends CollectionCommand {
     public RemoveGreaterKeyCommand(CollectionManager collectionManager) {
         super(
@@ -21,11 +23,14 @@ public class RemoveGreaterKeyCommand extends CollectionCommand {
         } catch (NumberFormatException e) {
             return new CommandResponse(CommandResponseCode.ERROR, "В поле key требуется число");
         }
-        int lastSize = collectionManager.getCollection().size();
-        collectionManager.getCollection().values().stream()
+        AtomicInteger countingDeletedTickets = new AtomicInteger(0);
+        collectionManager.getCollectionValuesStream()
                 .filter(t -> t.getId() > key)
-                .forEach(t -> collectionManager.remove(t.getId()));
-        if (lastSize == collectionManager.getCollection().size()) {
+                .forEach(t -> {
+                    collectionManager.remove(t.getId());
+                    countingDeletedTickets.incrementAndGet();
+                });
+        if (countingDeletedTickets.get() == 0) {
             return new CommandResponse(CommandResponseCode.ERROR, "Элементы не найдены");
         } else {
             return new CommandResponse(CommandResponseCode.SUCCESS, "Элементы удалены");

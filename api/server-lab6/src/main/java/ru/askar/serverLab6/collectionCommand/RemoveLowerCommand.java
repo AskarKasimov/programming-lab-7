@@ -5,6 +5,10 @@ import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.exception.InvalidInputFieldException;
 import ru.askar.serverLab6.collection.CollectionManager;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static ru.askar.serverLab6.collection.CollectionManager.validateTicket;
+
 public class RemoveLowerCommand extends ObjectCollectionCommand {
     public RemoveLowerCommand(CollectionManager collectionManager) {
         super(
@@ -20,18 +24,18 @@ public class RemoveLowerCommand extends ObjectCollectionCommand {
             return new CommandResponse(
                     CommandResponseCode.ERROR, "Данной команде требуется объект!");
         try {
-            collectionManager.validateTicket(object);
+            validateTicket(object);
         } catch (InvalidInputFieldException e) {
             return new CommandResponse(CommandResponseCode.ERROR, e.getMessage());
         }
-        int lastSize = collectionManager.getCollection().size();
-        collectionManager.getCollection().values().stream()
+        AtomicInteger countingDeletedTickets = new AtomicInteger(0);
+        collectionManager.getCollectionValuesStream()
                 .filter(t -> t.compareTo(object) > 0)
-                .forEach(
-                        t -> {
-                            collectionManager.remove(t.getId());
-                        });
-        if (lastSize == collectionManager.getCollection().size()) {
+                .forEach(t -> {
+                    collectionManager.remove(t.getId());
+                    countingDeletedTickets.incrementAndGet();
+                });
+        if (countingDeletedTickets.get() == 0) {
             return new CommandResponse(CommandResponseCode.ERROR, "Элементы не найдены");
         } else {
             return new CommandResponse(CommandResponseCode.SUCCESS, "Элементы удалены");

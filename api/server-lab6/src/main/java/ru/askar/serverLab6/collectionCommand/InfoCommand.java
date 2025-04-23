@@ -16,12 +16,10 @@ public class InfoCommand extends CollectionCommand {
     @Override
     public CommandResponse execute(String[] args) {
         String info =
-                "Тип коллекции: "
-                        + collectionManager.getCollection().getClass()
-                        + "\nДата инициализации: "
+                "Дата инициализации: "
                         + collectionManager.getDateOfCreation()
                         + "\nКоличество элементов: "
-                        + collectionManager.getCollection().size();
+                        + collectionManager.getCollectionValuesStream().count();
         return new CommandResponse(CommandResponseCode.INFO, info);
     }
 }

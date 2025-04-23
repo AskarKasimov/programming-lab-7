@@ -33,11 +33,11 @@ public class ReplaceIfGreaterCommand extends ObjectCollectionCommand {
                     CommandResponseCode.ERROR,
                     "id элемента из аргумента не совпадает с id объекта");
         }
-        if (collectionManager.getCollection().get(idToUpdate) == null) {
+        if (collectionManager.get(idToUpdate) == null) {
             return new CommandResponse(CommandResponseCode.ERROR, "Элемент с таким id не найден");
         }
-        if (object.compareTo(collectionManager.getCollection().get(idToUpdate)) < 0) {
-            Ticket oldTicket = collectionManager.getCollection().get(idToUpdate);
+        if (object.compareTo(collectionManager.get(idToUpdate)) < 0) {
+            Ticket oldTicket = collectionManager.get(idToUpdate);
             try {
                 collectionManager.remove(object.getId());
                 collectionManager.putWithValidation(object);

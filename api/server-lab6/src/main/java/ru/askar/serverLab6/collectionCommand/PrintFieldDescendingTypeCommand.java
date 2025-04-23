@@ -25,7 +25,7 @@ public class PrintFieldDescendingTypeCommand extends CollectionCommand {
     @Override
     public CommandResponse execute(String[] args) {
         List<TicketType> ticketTypes =
-                collectionManager.getCollection().values().stream()
+                collectionManager.getCollectionValuesStream()
                         .map(Ticket::getType)
                         .filter(Objects::nonNull)
                         .sorted()

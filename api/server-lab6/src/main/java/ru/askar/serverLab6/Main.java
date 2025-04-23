@@ -67,7 +67,7 @@ public class Main {
                     CommandResponseCode.ERROR.getColoredMessage("Ошибка инициализации коллекции: " + e.getMessage()));
             return;
         }
-        if (collectionManager.getCollection().isEmpty()) {
+        if (collectionManager.getCollectionValuesStream().findAny().isEmpty()) {
             System.out.println(CommandResponseCode.WARNING.getColoredMessage("Коллекция пуста"));
         }
         ArrayList<CommandAsList> commandList = new ArrayList<>();
@@ -81,7 +81,6 @@ public class Main {
         collectionCommandExecutor.register(new UpdateCommand(collectionManager));
         collectionCommandExecutor.register(new RemoveByKeyCommand(collectionManager));
         collectionCommandExecutor.register(new ClearCommand(collectionManager));
-        collectionCommandExecutor.register(new SaveCommand(collectionManager));
         collectionCommandExecutor.register(new ExitCommand());
         collectionCommandExecutor.register(new RemoveLowerCommand(collectionManager));
         collectionCommandExecutor.register(new ReplaceIfGreaterCommand(collectionManager));

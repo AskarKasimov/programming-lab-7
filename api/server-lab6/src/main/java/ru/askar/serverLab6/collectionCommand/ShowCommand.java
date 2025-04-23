@@ -9,6 +9,7 @@ import ru.askar.common.object.Ticket;
 import ru.askar.serverLab6.collection.CollectionManager;
 
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class ShowCommand extends CollectionCommand {
     private final CollectionManager collectionManager;
@@ -27,7 +28,7 @@ public class ShowCommand extends CollectionCommand {
         return new CommandResponse(
                 CommandResponseCode.INFO,
                 AsciiTable.getTable(
-                        collectionManager.getCollection().values(),
+                        collectionManager.getCollectionValuesStream().collect(Collectors.toList()),
                         Arrays.asList(
                                 new Column()
                                         .header("ID")

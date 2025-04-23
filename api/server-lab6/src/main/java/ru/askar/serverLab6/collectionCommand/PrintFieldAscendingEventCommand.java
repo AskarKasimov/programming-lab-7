@@ -25,7 +25,7 @@ public class PrintFieldAscendingEventCommand extends CollectionCommand {
     @Override
     public CommandResponse execute(String[] args) {
         List<Event> eventList =
-                collectionManager.getCollection().values().stream()
+                collectionManager.getCollectionValuesStream()
                         .map(Ticket::getEvent)
                         .filter(Objects::nonNull)
                         .sorted()

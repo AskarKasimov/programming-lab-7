@@ -21,7 +21,7 @@ public class RemoveByKeyCommand extends CollectionCommand {
         } catch (NumberFormatException e) {
             return new CommandResponse(CommandResponseCode.ERROR, "В поле id требуется число");
         }
-        if (collectionManager.getCollection().get(id) == null) {
+        if (collectionManager.get(id) == null) {
             return new CommandResponse(CommandResponseCode.ERROR, "Элемент с таким id не найден");
         }
         collectionManager.remove(id);

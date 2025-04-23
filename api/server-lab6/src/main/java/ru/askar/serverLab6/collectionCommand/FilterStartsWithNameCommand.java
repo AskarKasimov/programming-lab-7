@@ -23,7 +23,7 @@ public class FilterStartsWithNameCommand extends CollectionCommand {
     @Override
     public CommandResponse execute(String[] args) {
         List<Ticket> ticketList =
-                collectionManager.getCollection().values().stream()
+                collectionManager.getCollectionValuesStream()
                         .filter(t -> t.getName().startsWith(args[0]))
                         .toList();
         return new CommandResponse(

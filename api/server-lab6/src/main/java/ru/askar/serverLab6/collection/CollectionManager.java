@@ -6,7 +6,9 @@ import ru.askar.common.object.*;
 import java.io.IOException;
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
 /**
  * Manager для коллекции билетов.
@@ -191,12 +193,13 @@ public class CollectionManager {
 
     public LocalDateTime getDateOfCreation() {
         return dateOfInitialization;
+
     }
 
-    public TreeMap<Long, Ticket> getCollection() {
-        // безопасно возвращаем копию коллекции
+    public Stream<Ticket> getCollectionValuesStream() {
         synchronized (collection) {
-            return new TreeMap<>(collection);
+            // Создаём копию значений, чтобы стрим был независим от оригинальной коллекции
+            return new ArrayList<>(collection.values()).stream();
         }
     }
 
@@ -209,6 +212,12 @@ public class CollectionManager {
     public void remove(Long id) {
         synchronized (collection) {
             collection.remove(id);
+        }
+    }
+
+    public Ticket get(Long id) {
+        synchronized (collection) {
+            return collection.get(id);
         }
     }
 }

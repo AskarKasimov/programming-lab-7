@@ -11,11 +11,13 @@ public class ClearCommand extends CollectionCommand {
 
     @Override
     public CommandResponse execute(String[] args) {
-        if (collectionManager.getCollection().isEmpty())
-            return new CommandResponse(CommandResponseCode.WARNING, "Коллекция пуста");
-        else {
-            collectionManager.clear();
-            return new CommandResponse(CommandResponseCode.SUCCESS, "Коллекция очищена");
+        synchronized (collectionManager) {
+            if (collectionManager.getCollectionValuesStream().findAny().isEmpty())
+                return new CommandResponse(CommandResponseCode.WARNING, "Коллекция пуста");
+            else {
+                collectionManager.clear();
+                return new CommandResponse(CommandResponseCode.SUCCESS, "Коллекция очищена");
+            }
         }
     }
 }
