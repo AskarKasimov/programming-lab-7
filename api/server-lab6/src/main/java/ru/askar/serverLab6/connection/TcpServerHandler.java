@@ -141,7 +141,10 @@ public class TcpServerHandler implements ServerHandler {
         requestProcessorExecutor.submit(() -> {
             try {
                 collectionCommandExecutor.validateCommand(command.name(), command.args().length);
-                CommandResponse response = collectionCommandExecutor.execute(command.name(), command.args(), command.object());
+                CommandResponse response;
+                if (command.credentials() != null) {
+                    response = collectionCommandExecutor.execute(command.name(), command.args(), command.object(), command.credentials());
+                } else response = collectionCommandExecutor.execute(command.name(), command.args(), command.object());
                 sendMessage(channel, response);
             } catch (ClientDisconnectException e) {
                 handleDisconnect(channel.keyFor(selector), channel);

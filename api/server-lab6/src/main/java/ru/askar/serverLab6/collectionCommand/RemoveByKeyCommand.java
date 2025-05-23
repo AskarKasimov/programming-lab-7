@@ -4,6 +4,8 @@ import ru.askar.common.CommandResponse;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.serverLab6.collection.CollectionManager;
 
+import java.sql.SQLException;
+
 public class RemoveByKeyCommand extends CollectionCommand {
     public RemoveByKeyCommand(CollectionManager collectionManager) {
         super(
@@ -24,7 +26,11 @@ public class RemoveByKeyCommand extends CollectionCommand {
         if (collectionManager.get(id) == null) {
             return new CommandResponse(CommandResponseCode.ERROR, "Элемент с таким id не найден");
         }
-        collectionManager.remove(id);
+        try {
+            collectionManager.remove(id, credentials);
+        } catch (SQLException e) {
+            return new CommandResponse(CommandResponseCode.ERROR, e.getMessage());
+        }
         return new CommandResponse(CommandResponseCode.SUCCESS, "Элемент удалён");
     }
 }

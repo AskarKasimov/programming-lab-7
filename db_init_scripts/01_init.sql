@@ -1,8 +1,8 @@
 CREATE TABLE Users
 (
     id            SERIAL PRIMARY KEY CHECK ( id > 0 ),
-    name          VARCHAR(64) NOT NULL,
-    password_hash CHAR(96)    NOT NULL
+    name          VARCHAR(64)  NOT NULL,
+    password_hash VARCHAR(100) NOT NULL
 );
 
 CREATE TYPE EventType AS ENUM ('E_SPORTS', 'FOOTBALL', 'BASKETBALL', 'OPERA', 'EXPOSITION');

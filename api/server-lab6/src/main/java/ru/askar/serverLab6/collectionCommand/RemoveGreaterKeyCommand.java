@@ -4,6 +4,7 @@ import ru.askar.common.CommandResponse;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.serverLab6.collection.CollectionManager;
 
+import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class RemoveGreaterKeyCommand extends CollectionCommand {
@@ -23,17 +24,26 @@ public class RemoveGreaterKeyCommand extends CollectionCommand {
         } catch (NumberFormatException e) {
             return new CommandResponse(CommandResponseCode.ERROR, "В поле key требуется число");
         }
-        AtomicInteger countingDeletedTickets = new AtomicInteger(0);
+        AtomicInteger count = new AtomicInteger(0);
+        AtomicInteger errorCount = new AtomicInteger(0);
         collectionManager.getCollectionValuesStream()
                 .filter(t -> t.getId() > key)
                 .forEach(t -> {
-                    collectionManager.remove(t.getId());
-                    countingDeletedTickets.incrementAndGet();
+                    try {
+                        int removed = collectionManager.remove(t.getId(), credentials);
+                        count.addAndGet(removed);
+                    } catch (SQLException e) {
+                        errorCount.incrementAndGet();
+                    }
                 });
-        if (countingDeletedTickets.get() == 0) {
-            return new CommandResponse(CommandResponseCode.ERROR, "Элементы не найдены");
+        if (count.get() == 0 && errorCount.get() == 0) {
+            return new CommandResponse(CommandResponseCode.ERROR, "Ваших элементов не найдено");
+        } else if (errorCount.get() > 0) {
+            return new CommandResponse(CommandResponseCode.SUCCESS,
+                    String.format("Удалено %d элементов, но возникло %d ошибок.", count.get(), errorCount.get()));
         } else {
-            return new CommandResponse(CommandResponseCode.SUCCESS, "Элементы удалены");
+            return new CommandResponse(CommandResponseCode.SUCCESS,
+                    String.format("Удалено %d ваших элементов.", count.get()));
         }
     }
 }

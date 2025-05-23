@@ -1,5 +1,7 @@
 package ru.askar.serverLab6.database;
 
+import org.apache.commons.codec.digest.DigestUtils;
+import ru.askar.common.Credentials;
 import ru.askar.common.object.*;
 
 import java.sql.*;
@@ -12,6 +14,33 @@ public class SQLConnection {
     public SQLConnection(Connection connection) {
         this.connection = connection;
     }
+
+    public int removeTicket(Long id, Credentials credentials) throws SQLException {
+        String sql = "DELETE FROM ticket WHERE ticket.id = ? AND ticket.creator_id IN (SELECT id FROM users WHERE users.name=? AND users.password_hash=?)";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            stmt.setString(2, credentials.login());
+            stmt.setString(3, DigestUtils.sha384Hex(credentials.password()));
+            return stmt.executeUpdate();
+        }
+    }
+
+
+    public Integer getUserId(Credentials credentials) throws SQLException {
+        String sql = "SELECT id FROM users WHERE name = ? AND password_hash = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, credentials.login());
+            stmt.setString(2, DigestUtils.sha384Hex(credentials.password()));
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                } else {
+                    return null;
+                }
+            }
+        }
+    }
+
 
     private Ticket mapRowToTicket(ResultSet rs) throws SQLException {
         Coordinates coordinates = new Coordinates(

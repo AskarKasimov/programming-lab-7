@@ -40,7 +40,11 @@ public class UpdateCommand extends ObjectCollectionCommand {
             return new CommandResponse(CommandResponseCode.ERROR, "Элемент с таким id не найден");
         }
         try {
-            collectionManager.remove(idToUpdate);
+            collectionManager.remove(idToUpdate, credentials);
+        } catch (SQLException e) {
+            return new CommandResponse(CommandResponseCode.ERROR, e.getMessage());
+        }
+        try {
             collectionManager.putWithValidation(object);
         } catch (InvalidInputFieldException | SQLException e) {
             return new CommandResponse(CommandResponseCode.ERROR, e.getMessage());

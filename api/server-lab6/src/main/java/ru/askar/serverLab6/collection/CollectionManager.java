@@ -1,5 +1,6 @@
 package ru.askar.serverLab6.collection;
 
+import ru.askar.common.Credentials;
 import ru.askar.common.exception.InvalidInputFieldException;
 import ru.askar.common.object.Ticket;
 import ru.askar.serverLab6.database.SQLConnection;
@@ -98,9 +99,9 @@ public class CollectionManager {
     }
 
 
-    public void putWithValidation(Ticket ticket) throws InvalidInputFieldException, SQLException {
+    public Long putWithValidation(Ticket ticket) throws InvalidInputFieldException, SQLException {
         validateTicket(ticket);
-        connection.putTicket(ticket);
+        return connection.putTicket(ticket);
     }
 
 
@@ -115,21 +116,23 @@ public class CollectionManager {
         }
     }
 
-    public void clear() {
+    public int remove(Long id, Credentials credentials) throws SQLException {
         synchronized (collection) {
-            collection.clear();
-        }
-    }
-
-    public void remove(Long id) {
-        synchronized (collection) {
-            collection.remove(id);
+            int deleted = connection.removeTicket(id, credentials);
+            if (deleted == 1) collection.remove(id);
+            return deleted;
         }
     }
 
     public Ticket get(Long id) {
         synchronized (collection) {
             return collection.get(id);
+        }
+    }
+
+    public Integer getUser(Credentials credentials) throws SQLException {
+        synchronized (collection) {
+            return connection.getUserId(credentials);
         }
     }
 }

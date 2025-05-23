@@ -17,11 +17,12 @@ public class InsertCommand extends ObjectCollectionCommand {
         if (object == null)
             return new CommandResponse(
                     CommandResponseCode.ERROR, "Данной команде требуется объект!");
+        Long createdId;
         try {
-            collectionManager.putWithValidation(object);
+            createdId = collectionManager.putWithValidation(object);
         } catch (InvalidInputFieldException | SQLException e) {
             return new CommandResponse(CommandResponseCode.ERROR, e.getMessage());
         }
-        return new CommandResponse(CommandResponseCode.SUCCESS, "Элемент добавлен");
+        return new CommandResponse(CommandResponseCode.SUCCESS, "Элемент добавлен с id " + createdId);
     }
 }

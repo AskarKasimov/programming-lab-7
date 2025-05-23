@@ -39,7 +39,11 @@ public class ReplaceIfGreaterCommand extends ObjectCollectionCommand {
         if (object.compareTo(collectionManager.get(idToUpdate)) < 0) {
             Ticket oldTicket = collectionManager.get(idToUpdate);
             try {
-                collectionManager.remove(object.getId());
+                collectionManager.remove(object.getId(), credentials);
+            } catch (SQLException e) {
+                return new CommandResponse(CommandResponseCode.ERROR, "Ошибка удаления старого элемента");
+            }
+            try {
                 collectionManager.putWithValidation(object);
             } catch (InvalidInputFieldException | SQLException e) {
                 try {

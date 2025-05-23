@@ -1,10 +1,12 @@
 package ru.askar.serverLab6.collectionCommand;
 
+import ru.askar.common.Credentials;
 import ru.askar.common.cli.Command;
 import ru.askar.serverLab6.collection.CollectionManager;
 
 public abstract class CollectionCommand extends Command {
     protected final CollectionManager collectionManager;
+    protected Credentials credentials;
 
     /**
      * Заполнение имени и количества требуемых аргументов
@@ -16,5 +18,9 @@ public abstract class CollectionCommand extends Command {
             String name, int argsCount, String info, CollectionManager collectionManager) {
         super(name, argsCount, info);
         this.collectionManager = collectionManager;
+    }
+
+    public void setCredentials(Credentials credentials) {
+        this.credentials = credentials;
     }
 }
