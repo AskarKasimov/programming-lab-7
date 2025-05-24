@@ -49,8 +49,8 @@ public class Main {
         String dbPassword = System.getenv("DB_PASSWORD");
         if (dbPassword == null) {
             System.out.println(
-                    CommandResponseCode.ERROR.getColoredMessage("Не задан пароль БД!"));
-            return;
+                    CommandResponseCode.ERROR.getColoredMessage("Не задан пароль БД! Используется пустой пароль"));
+            dbPassword = "";
         }
         CollectionManager collectionManager;
         try {
