@@ -2,6 +2,7 @@ package ru.askar.serverLab6.collection;
 
 import ru.askar.common.Credentials;
 import ru.askar.common.exception.InvalidInputFieldException;
+import ru.askar.common.object.Event;
 import ru.askar.common.object.Ticket;
 import ru.askar.serverLab6.database.SQLConnection;
 
@@ -31,13 +32,6 @@ public class CollectionManager {
         // ticket id
         if (object.getId() != null && object.getId() < 1) {
             throw new InvalidInputFieldException("Поле id должно быть больше 0");
-        }
-        // ticket creatorId
-        if (object.getCreatorId() == null) {
-            throw new InvalidInputFieldException("Поле creatorId не может быть null");
-        }
-        if (object.getCreatorId() < 1) {
-            throw new InvalidInputFieldException("Поле creatorId должно быть больше 0");
         }
         // ticket name
         if (object.getName() == null) {
@@ -106,9 +100,31 @@ public class CollectionManager {
     }
 
 
-    public Long putWithValidation(Ticket ticket) throws InvalidInputFieldException, SQLException {
-        validateTicket(ticket);
-        return connection.putTicket(ticket);
+    public Long putWithValidation(Ticket ticket, Credentials credentials) throws InvalidInputFieldException, SQLException {
+        synchronized (collection) {
+            Event event = ticket.getEvent();
+            if (event != null) {
+                //событие с такими же данными
+                Integer existingEventId = connection.findMatchingEvent(event);
+                if (existingEventId != null) {
+                    event.setId(existingEventId);
+                } else {
+                    Integer newEventId = connection.addEvent(event);
+                    if (newEventId == null) {
+                        throw new SQLException("Не удалось добавить событие в базу данных");
+                    }
+                    event.setId(newEventId);
+                }
+            }
+            validateTicket(ticket);
+            Long id = connection.putTicket(ticket, credentials);
+            if (id == null) {
+                throw new SQLException("Не удалось добавить билет в базу данных");
+            }
+            ticket.setId(id);
+            collection.put(id, ticket);
+            return id;
+        }
     }
 
 
@@ -127,7 +143,7 @@ public class CollectionManager {
         synchronized (collection) {
             int deleted = connection.removeTicket(id, credentials);
             if (deleted == 1) collection.remove(id);
-            return deleted;
+            throw new SQLException("Не удалось удалить билет");
         }
     }
 

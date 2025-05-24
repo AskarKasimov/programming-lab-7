@@ -37,18 +37,18 @@ public class TcpClientHandler implements ClientHandler {
     private InputReader<ClientCommand> nestedInputReader = null;
     private Credentials credentials;
 
+    public TcpClientHandler(
+            InputReader<ClientCommand> inputReader, CommandExecutor<ClientCommand> commandExecutor) {
+        this.inputReader = inputReader;
+        this.commandExecutor = commandExecutor;
+    }
+
     public Credentials getCredentials() {
         return credentials;
     }
 
     public void setCredentials(Credentials credentials) {
         this.credentials = credentials;
-    }
-
-    public TcpClientHandler(
-            InputReader<ClientCommand> inputReader, CommandExecutor<ClientCommand> commandExecutor) {
-        this.inputReader = inputReader;
-        this.commandExecutor = commandExecutor;
     }
 
     @Override

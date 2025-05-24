@@ -16,7 +16,7 @@ public class SQLConnection {
     }
 
     public boolean registerUser(Credentials credentials) throws SQLException {
-        String checkSql = "SELECT id FROM users WHERE name = ?";
+        String checkSql = "SELECT id FROM users WHERE username = ?";
         try (PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {
             checkStmt.setString(1, credentials.username());
             try (ResultSet rs = checkStmt.executeQuery()) {
@@ -26,7 +26,7 @@ public class SQLConnection {
             }
         }
 
-        String insertSql = "INSERT INTO users (name, password_hash) VALUES (?, ?)";
+        String insertSql = "INSERT INTO users (username, password_hash) VALUES (?, ?)";
         try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
             insertStmt.setString(1, credentials.username());
             insertStmt.setString(2, DigestUtils.sha384Hex(credentials.password()));
@@ -35,20 +35,24 @@ public class SQLConnection {
         }
     }
 
-    public boolean authorizeUser(Credentials credentials) throws SQLException {
-        String sql = "SELECT id FROM users WHERE name = ? AND password_hash = ?";
+    public Integer authorizeUser(Credentials credentials) throws SQLException {
+        String sql = "SELECT id FROM users WHERE username = ? AND password_hash = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, credentials.username());
             stmt.setString(2, DigestUtils.sha384Hex(credentials.password()));
             try (ResultSet rs = stmt.executeQuery()) {
-                return rs.next(); // true, если пользователь найден
+                if (rs.next()) {
+                    return rs.getInt("id");
+                } else {
+                    return null;
+                }
             }
         }
     }
 
 
     public int removeTicket(Long id, Credentials credentials) throws SQLException {
-        String sql = "DELETE FROM ticket WHERE ticket.id = ? AND ticket.creator_id IN (SELECT id FROM users WHERE users.name=? AND users.password_hash=?)";
+        String sql = "DELETE FROM ticket WHERE ticket.id = ? AND ticket.creator_id IN (SELECT id FROM users WHERE users.username=? AND users.password_hash=?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setLong(1, id);
             stmt.setString(2, credentials.username());
@@ -64,13 +68,24 @@ public class SQLConnection {
                 rs.getFloat("y")
         );
 
-        Event event = new Event(
-                rs.getInt("event_id"),
-                rs.getString("event_name"),
-                rs.getString("description"),
-                EventType.valueOf(rs.getString("event_type"))
-        );
-
+        String eventName = rs.getString("event_type");
+        Event event = null;
+        if (rs.getString("event_id") != null && eventName != null && !eventName.isEmpty()) {
+            event = new Event(
+                    rs.getInt("event_id"),
+                    rs.getString("event_name"),
+                    rs.getString("description"),
+                    EventType.valueOf(eventName)
+            );
+        }
+        if (rs.getString("event_id") != null && (eventName == null || eventName.isEmpty())) {
+            event = new Event(
+                    rs.getInt("event_id"),
+                    rs.getString("event_name"),
+                    rs.getString("description"),
+                    null
+            );
+        }
         return new Ticket(
                 rs.getTimestamp("creation_date").toLocalDateTime(),
                 rs.getLong("ticket_id"),
@@ -112,7 +127,14 @@ public class SQLConnection {
         }
     }
 
-    public Long putTicket(Ticket ticket) throws SQLException {
+    public Long putTicket(Ticket ticket, Credentials credentials) throws SQLException {
+        if (authorizeUser(credentials) == null) {
+            if (!registerUser(credentials)) {
+                throw new SQLException("Такого пользователя не существует и не удалось зарегистрировать нового по предоставленным данным");
+            }
+        }
+        Integer creatorId = authorizeUser(credentials);
+        ticket.setCreatorId(creatorId);
         boolean idIsNull = (ticket.getId() == null);
         String sql;
         if (idIsNull) {
@@ -135,10 +157,14 @@ public class SQLConnection {
             stmt.setTimestamp(paramIndex++, Timestamp.valueOf(ticket.getCreationDate()));
             stmt.setLong(paramIndex++, ticket.getPrice());
             stmt.setString(paramIndex++, ticket.getType().toString());
-            stmt.setObject(paramIndex, ticket.getEvent() != null ? ticket.getEvent().getId() : null);
 
+            if (ticket.getEvent() == null) {
+                stmt.setNull(paramIndex++, Types.INTEGER);
+            } else {
+                stmt.setInt(paramIndex++, ticket.getEvent().getId());
+            }
             int affectedRows = stmt.executeUpdate();
-
+            fixTicketIdSequence();
             if (affectedRows > 0) {
                 try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
@@ -149,5 +175,57 @@ public class SQLConnection {
             return null;
         }
     }
+
+    private void fixTicketIdSequence() throws SQLException {
+        String sql = "SELECT setval('ticket_id_seq', GREATEST((SELECT COALESCE(MAX(id), 0) FROM ticket), nextval('ticket_id_seq')))";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.execute();
+        }
+    }
+
+
+    public Integer addEvent(Event event) throws SQLException {
+        String sql = "INSERT INTO event (name, description, event_type) VALUES (?, ?, ?::EventType)";
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, event.getName());
+            stmt.setString(2, event.getDescription());
+            if (event.getEventType() == null)
+                stmt.setNull(3, Types.OTHER);
+            else
+                stmt.setString(3, event.getEventType().name());
+
+            int affectedRows = stmt.executeUpdate();
+
+            if (affectedRows > 0) {
+                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        return generatedKeys.getInt(1);
+                    }
+                }
+            }
+
+            return null;
+        }
+    }
+
+    public Integer findMatchingEvent(Event event) throws SQLException {
+        String sql = "SELECT id FROM event WHERE name = ? AND description = ? AND event_type = ?::EventType";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, event.getName());
+            stmt.setString(2, event.getDescription());
+            if (event.getEventType() == null)
+                stmt.setNull(3, Types.OTHER);
+            else
+                stmt.setString(3, event.getEventType().name());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id");
+                }
+            }
+        }
+        return null;
+    }
+
+
 }
 

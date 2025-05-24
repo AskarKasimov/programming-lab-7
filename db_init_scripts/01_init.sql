@@ -1,7 +1,7 @@
 CREATE TABLE Users
 (
     id            SERIAL PRIMARY KEY CHECK ( id > 0 ),
-    name          VARCHAR(64) UNIQUE NOT NULL,
+    username          VARCHAR(64) UNIQUE NOT NULL,
     password_hash VARCHAR(100)       NOT NULL
 );
 

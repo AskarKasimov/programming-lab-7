@@ -16,7 +16,8 @@ public class InsertCommand extends ObjectCollectionCommand {
     public CommandResponse execute(String[] args) {
         Long createdId;
         try {
-            createdId = collectionManager.putWithValidation(object);
+            System.out.println(object);
+            createdId = collectionManager.putWithValidation(object, credentials);
         } catch (InvalidInputFieldException | SQLException e) {
             return new CommandResponse(CommandResponseCode.ERROR, e.getMessage());
         }

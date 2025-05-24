@@ -41,10 +41,10 @@ public class ReplaceIfGreaterCommand extends ObjectCollectionCommand {
                 return new CommandResponse(CommandResponseCode.ERROR, "Ошибка удаления старого элемента");
             }
             try {
-                collectionManager.putWithValidation(object);
+                collectionManager.putWithValidation(object, credentials);
             } catch (InvalidInputFieldException | SQLException e) {
                 try {
-                    collectionManager.putWithValidation(oldTicket);
+                    collectionManager.putWithValidation(oldTicket, credentials);
                 } catch (InvalidInputFieldException | SQLException ignored) {
                     // такого не может быть:))
                 }

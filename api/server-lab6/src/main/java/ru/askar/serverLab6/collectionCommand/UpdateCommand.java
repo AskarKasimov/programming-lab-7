@@ -42,7 +42,7 @@ public class UpdateCommand extends ObjectCollectionCommand {
             return new CommandResponse(CommandResponseCode.ERROR, e.getMessage());
         }
         try {
-            collectionManager.putWithValidation(object);
+            collectionManager.putWithValidation(object, credentials);
         } catch (InvalidInputFieldException | SQLException e) {
             return new CommandResponse(CommandResponseCode.ERROR, e.getMessage());
         }
