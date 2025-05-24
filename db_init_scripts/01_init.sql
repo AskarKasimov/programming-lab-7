@@ -26,7 +26,7 @@ CREATE TABLE Ticket
     creation_date TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ticket_type   TicketType NOT NULL,
     price         FLOAT      NOT NULL CHECK ( price > 0.00 ),
-    creator_id    INT REFERENCES Users (id),
+    creator_id    INT        NOT NULL REFERENCES Users (id),
     event_id      int REFERENCES Event (id)
 );
 

@@ -9,7 +9,6 @@ import ru.askar.common.Credentials;
 import ru.askar.common.cli.CommandExecutor;
 import ru.askar.common.cli.CommandParser;
 import ru.askar.common.cli.CommandResponseCode;
-import ru.askar.common.cli.CommandWithMiddleware;
 import ru.askar.common.cli.input.InputReader;
 
 import java.io.*;
@@ -27,7 +26,7 @@ public class TcpClientHandler implements ClientHandler {
     private final CommandExecutor<ClientCommand> commandExecutor;
     private final ConcurrentLinkedQueue<Object> outputQueue = new ConcurrentLinkedQueue<>();
     private final int maxDepth = 3;
-    private final List<CommandWithMiddleware<ClientCommand>> originalCommands = new ArrayList<>();
+    private final List<ClientCommand> originalCommands = new ArrayList<>();
     private String host = "";
     private int port = -1;
     private Selector selector;
@@ -225,7 +224,7 @@ public class TcpClientHandler implements ClientHandler {
                             CommandResponseCode.WARNING.getColoredMessage(
                                     "Отключение от сервера. Возврат к локальному режиму."));
             commandExecutor.clearCommands();
-            originalCommands.forEach(command -> commandExecutor.register(command.getOriginalCommand()));
+            originalCommands.forEach(command -> commandExecutor.register(command));
             nestedInputReader = null;
         }
 

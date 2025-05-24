@@ -92,7 +92,7 @@ public class Main {
                 .getAllCommands()
                 .forEach(
                         (name, command) -> {
-                            if (command.getOriginalCommand() instanceof ObjectCollectionCommand)
+                            if (command instanceof ObjectCollectionCommand)
                                 commandList.add(
                                         new CommandAsList(
                                                 command.getName(), command.getArgsCount(), true));
