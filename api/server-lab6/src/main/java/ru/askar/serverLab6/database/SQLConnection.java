@@ -19,7 +19,7 @@ public class SQLConnection {
         String sql = "DELETE FROM ticket WHERE ticket.id = ? AND ticket.creator_id IN (SELECT id FROM users WHERE users.name=? AND users.password_hash=?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setLong(1, id);
-            stmt.setString(2, credentials.login());
+            stmt.setString(2, credentials.username());
             stmt.setString(3, DigestUtils.sha384Hex(credentials.password()));
             return stmt.executeUpdate();
         }
@@ -29,7 +29,7 @@ public class SQLConnection {
     public Integer getUserId(Credentials credentials) throws SQLException {
         String sql = "SELECT id FROM users WHERE name = ? AND password_hash = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, credentials.login());
+            stmt.setString(1, credentials.username());
             stmt.setString(2, DigestUtils.sha384Hex(credentials.password()));
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -112,9 +112,7 @@ public class SQLConnection {
             if (!idIsNull) {
                 stmt.setLong(paramIndex++, ticket.getId());
             }
-            if (ticket.getCreatorId() == null) stmt.setNull(paramIndex++, Types.INTEGER);
-            else
-                stmt.setInt(paramIndex++, ticket.getCreatorId());
+            stmt.setInt(paramIndex++, ticket.getCreatorId());
             stmt.setString(paramIndex++, ticket.getName());
             stmt.setFloat(paramIndex++, ticket.getCoordinates().getX());
             stmt.setFloat(paramIndex++, ticket.getCoordinates().getY());

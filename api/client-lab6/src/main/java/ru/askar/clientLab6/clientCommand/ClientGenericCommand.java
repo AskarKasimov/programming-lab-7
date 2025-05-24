@@ -4,6 +4,7 @@ import ru.askar.clientLab6.connection.ClientHandler;
 import ru.askar.common.CommandAsList;
 import ru.askar.common.CommandResponse;
 import ru.askar.common.CommandToExecute;
+import ru.askar.common.Credentials;
 import ru.askar.common.cli.CommandResponseCode;
 import ru.askar.common.cli.input.InputReader;
 import ru.askar.common.cli.output.OutputWriter;
@@ -11,10 +12,11 @@ import ru.askar.common.exception.UserRejectedToFillFieldsException;
 import ru.askar.common.object.Ticket;
 
 public class ClientGenericCommand extends ClientCommand {
-    private final InputReader inputReader;
+    private final InputReader<ClientCommand> inputReader;
     private final OutputWriter outputWriter;
     private final ClientHandler clientHandler;
     private final boolean needObject;
+    private final Credentials credentials;
 
     /**
      * Заполнение имени и количества требуемых аргументов
@@ -22,15 +24,16 @@ public class ClientGenericCommand extends ClientCommand {
      * @param inputReader
      */
     public ClientGenericCommand(
-            InputReader inputReader,
+            InputReader<ClientCommand> inputReader,
             CommandAsList rawCommand,
             ClientHandler clientHandler,
-            OutputWriter outputWriter) {
+            OutputWriter outputWriter, Credentials credentials) {
         super(rawCommand.name(), rawCommand.args(), null, clientHandler);
         this.clientHandler = clientHandler;
         this.needObject = rawCommand.needObject();
         this.outputWriter = outputWriter;
         this.inputReader = inputReader;
+        this.credentials = credentials;
     }
 
     @Override
@@ -63,12 +66,12 @@ public class ClientGenericCommand extends ClientCommand {
                 ticket =
                         Ticket.createTicket(
                                 outputWriter, inputReader, id, ticketName, price, null, scriptMode);
-                clientHandler.sendMessage(new CommandToExecute(this.name, args, ticket));
+                clientHandler.sendMessage(new CommandToExecute(this.name, args, ticket, credentials));
             } catch (UserRejectedToFillFieldsException e) {
                 return new CommandResponse(CommandResponseCode.ERROR, e.getMessage());
             }
         } else {
-            clientHandler.sendMessage(new CommandToExecute(this.name, args, null));
+            clientHandler.sendMessage(new CommandToExecute(this.name, args, null, credentials));
         }
         return new CommandResponse(CommandResponseCode.HIDDEN, "Команда отправлена на сервер");
     }

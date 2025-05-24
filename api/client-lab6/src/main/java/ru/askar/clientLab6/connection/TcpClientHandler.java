@@ -5,6 +5,7 @@ import ru.askar.clientLab6.clientCommand.ClientCommand;
 import ru.askar.clientLab6.clientCommand.ClientGenericCommand;
 import ru.askar.common.CommandAsList;
 import ru.askar.common.CommandResponse;
+import ru.askar.common.Credentials;
 import ru.askar.common.cli.CommandExecutor;
 import ru.askar.common.cli.CommandParser;
 import ru.askar.common.cli.CommandResponseCode;
@@ -23,7 +24,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class TcpClientHandler implements ClientHandler {
     private final InputReader<ClientCommand> inputReader; // основной InputReader
-    private final CommandExecutor commandExecutor;
+    private final CommandExecutor<ClientCommand> commandExecutor;
     private final ConcurrentLinkedQueue<Object> outputQueue = new ConcurrentLinkedQueue<>();
     private final int maxDepth = 3;
     private final List<CommandWithMiddleware<ClientCommand>> originalCommands = new ArrayList<>();
@@ -34,7 +35,16 @@ public class TcpClientHandler implements ClientHandler {
     private volatile boolean running = false;
     private int depth = 0;
     // Для вложенного режима
-    private InputReader<ClientGenericCommand> nestedInputReader = null;
+    private InputReader<ClientCommand> nestedInputReader = null;
+    private Credentials credentials;
+
+    public Credentials getCredentials() {
+        return credentials;
+    }
+
+    public void setCredentials(Credentials credentials) {
+        this.credentials = credentials;
+    }
 
     public TcpClientHandler(
             InputReader<ClientCommand> inputReader, CommandExecutor<ClientCommand> commandExecutor) {
@@ -150,8 +160,17 @@ public class TcpClientHandler implements ClientHandler {
 
                         if (nestedInputReader == null) {
                             commandExecutor.clearCommands();
+                            for (CommandAsList commandAsList : commandsAsList) {
+                                commandExecutor.register(
+                                        new ClientGenericCommand(
+                                                nestedInputReader,
+                                                commandAsList,
+                                                this,
+                                                commandExecutor.getOutputWriter(),
+                                                credentials));
+                            }
                             nestedInputReader =
-                                    new InputReader<ClientGenericCommand>(
+                                    new InputReader<>(
                                             commandExecutor,
                                             new CommandParser(),
                                             inputReader.getBufferedReader());
@@ -162,15 +181,6 @@ public class TcpClientHandler implements ClientHandler {
                                                     "Вход в режим полученных команд сервера"));
                         } else {
                             commandExecutor.clearCommands();
-                        }
-
-                        for (CommandAsList commandAsList : commandsAsList) {
-                            commandExecutor.register(
-                                    new ClientGenericCommand(
-                                            nestedInputReader,
-                                            commandAsList,
-                                            this,
-                                            commandExecutor.getOutputWriter()));
                         }
                     } else if (dto instanceof CommandResponse commandResponse) {
                         commandExecutor
@@ -235,6 +245,7 @@ public class TcpClientHandler implements ClientHandler {
                 }
             }
         } catch (IOException | CancelledKeyException e) {
+            System.out.println("Ошибка при отправке данных: " + e.getMessage());
             retryConnection();
             handleDisconnect();
         }

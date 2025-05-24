@@ -32,6 +32,13 @@ public class CollectionManager {
         if (object.getId() != null && object.getId() < 1) {
             throw new InvalidInputFieldException("Поле id должно быть больше 0");
         }
+        // ticket creatorId
+        if (object.getCreatorId() == null) {
+            throw new InvalidInputFieldException("Поле creatorId не может быть null");
+        }
+        if (object.getCreatorId() < 1) {
+            throw new InvalidInputFieldException("Поле creatorId должно быть больше 0");
+        }
         // ticket name
         if (object.getName() == null) {
             throw new InvalidInputFieldException("Поле name не может быть null");

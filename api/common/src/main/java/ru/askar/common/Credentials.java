@@ -1,4 +1,6 @@
 package ru.askar.common;
 
-public record Credentials(String login, String password) {
+import java.io.Serializable;
+
+public record Credentials(String username, String password) implements Serializable {
 }

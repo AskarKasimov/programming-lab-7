@@ -14,21 +14,6 @@ public class CollectionCommandExecutor extends CommandExecutor<CollectionCommand
     public CommandResponse execute(
             String commandName,
             String[] args,
-            Ticket object
-    ) throws ExitCLIException, NoSuchCommandException {
-        validateCommand(commandName, args.length);
-        CommandWithMiddleware<CollectionCommand> commandWrapper = commands.get(commandName);
-
-        CollectionCommand originalCommand = commandWrapper.getOriginalCommand();
-        if (originalCommand instanceof ObjectCollectionCommand) {
-            ((ObjectCollectionCommand) originalCommand).setObject(object);
-        }
-        return commandWrapper.execute(args);
-    }
-
-    public CommandResponse execute(
-            String commandName,
-            String[] args,
             Ticket object,
             Credentials credentials
     ) throws ExitCLIException, NoSuchCommandException {

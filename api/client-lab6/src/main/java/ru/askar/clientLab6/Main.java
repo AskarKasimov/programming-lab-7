@@ -22,8 +22,8 @@ public class Main {
         CommandParser commandParser = new CommandParser();
 
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
-        InputReader inputReader =
-                new InputReader(clientCommandExecutor, commandParser, bufferedReader);
+        InputReader<ClientCommand> inputReader =
+                new InputReader<>(clientCommandExecutor, commandParser, bufferedReader);
 
         ClientHandler clientHandler = new TcpClientHandler(inputReader, clientCommandExecutor);
 

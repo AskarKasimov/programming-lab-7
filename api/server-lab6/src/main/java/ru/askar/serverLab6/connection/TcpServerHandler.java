@@ -142,9 +142,7 @@ public class TcpServerHandler implements ServerHandler {
             try {
                 collectionCommandExecutor.validateCommand(command.name(), command.args().length);
                 CommandResponse response;
-                if (command.credentials() != null) {
-                    response = collectionCommandExecutor.execute(command.name(), command.args(), command.object(), command.credentials());
-                } else response = collectionCommandExecutor.execute(command.name(), command.args(), command.object());
+                response = collectionCommandExecutor.execute(command.name(), command.args(), command.object(), command.credentials());
                 sendMessage(channel, response);
             } catch (ClientDisconnectException e) {
                 handleDisconnect(channel.keyFor(selector), channel);
@@ -178,7 +176,9 @@ public class TcpServerHandler implements ServerHandler {
             synchronized (channel) { // Синхронизация на уровне канала
                 try {
                     ByteBuffer data = serialize(message);
-                    ByteBuffer header = ByteBuffer.allocate(4).putInt(data.limit()).flip();
+                    ByteBuffer header = ByteBuffer.allocate(4);
+                    header.putInt(data.limit());
+                    header.flip();
                     channel.write(new ByteBuffer[]{header, data});
                 } catch (IOException e) {
                     throw new RuntimeException(e);

@@ -3,6 +3,7 @@ package ru.askar.clientLab6.clientCommand;
 import ru.askar.clientLab6.NeedToReconnectException;
 import ru.askar.clientLab6.connection.ClientHandler;
 import ru.askar.common.CommandResponse;
+import ru.askar.common.Credentials;
 import ru.askar.common.cli.CommandResponseCode;
 
 import java.io.IOException;
@@ -13,8 +14,8 @@ public class ClientStartCommand extends ClientCommand {
     public ClientStartCommand(ClientHandler clientHandler) {
         super(
                 "start",
-                2,
-                "start host port - запуск клиента на указанный хост и порт",
+                4,
+                "start host port user password - запуск клиента на указанный хост и порт (всю сессию будут использоваться те же юзер и пароль)",
                 clientHandler);
     }
 
@@ -22,6 +23,8 @@ public class ClientStartCommand extends ClientCommand {
     public CommandResponse execute(String[] args) {
         String host = args[0];
         int port = Integer.parseInt(args[1]);
+
+        clientHandler.setCredentials(new Credentials(args[2], args[3]));
 
         if (clientHandler.getRunning()) {
             return new CommandResponse(CommandResponseCode.ERROR, "Клиент уже запущен!");
