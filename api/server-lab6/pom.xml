@@ -5,11 +5,11 @@
 
     <parent>
         <groupId>ru.askar</groupId>
-        <artifactId>lab6</artifactId>
+        <artifactId>lab7</artifactId>
         <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>server-lab6</artifactId>
+    <artifactId>server-lab7</artifactId>
 
     <build>
         <plugins>
@@ -20,7 +20,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>ru.askar.serverLab6.Main</mainClass>
+                            <mainClass>ru.askar.serverLab7.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

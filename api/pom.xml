@@ -4,14 +4,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ru.askar</groupId>
-    <artifactId>lab6</artifactId>
+    <artifactId>lab7</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
         <module>common</module>
-        <module>server-lab6</module>
-        <module>client-lab6</module>
+        <module>server-lab7</module>
+        <module>client-lab7</module>
     </modules>
 
     <properties>
