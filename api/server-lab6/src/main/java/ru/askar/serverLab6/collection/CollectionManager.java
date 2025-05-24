@@ -136,10 +136,4 @@ public class CollectionManager {
             return collection.get(id);
         }
     }
-
-    public Integer getUser(Credentials credentials) throws SQLException {
-        synchronized (collection) {
-            return connection.getUserId(credentials);
-        }
-    }
 }

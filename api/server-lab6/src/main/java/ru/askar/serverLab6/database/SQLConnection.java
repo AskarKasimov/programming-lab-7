@@ -15,6 +15,38 @@ public class SQLConnection {
         this.connection = connection;
     }
 
+    public boolean registerUser(Credentials credentials) throws SQLException {
+        String checkSql = "SELECT id FROM users WHERE name = ?";
+        try (PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {
+            checkStmt.setString(1, credentials.username());
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next()) {
+                    return false; // уже существует
+                }
+            }
+        }
+
+        String insertSql = "INSERT INTO users (name, password_hash) VALUES (?, ?)";
+        try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
+            insertStmt.setString(1, credentials.username());
+            insertStmt.setString(2, DigestUtils.sha384Hex(credentials.password()));
+            int affectedRows = insertStmt.executeUpdate();
+            return affectedRows > 0;
+        }
+    }
+
+    public boolean authorizeUser(Credentials credentials) throws SQLException {
+        String sql = "SELECT id FROM users WHERE name = ? AND password_hash = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, credentials.username());
+            stmt.setString(2, DigestUtils.sha384Hex(credentials.password()));
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next(); // true, если пользователь найден
+            }
+        }
+    }
+
+
     public int removeTicket(Long id, Credentials credentials) throws SQLException {
         String sql = "DELETE FROM ticket WHERE ticket.id = ? AND ticket.creator_id IN (SELECT id FROM users WHERE users.name=? AND users.password_hash=?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -22,22 +54,6 @@ public class SQLConnection {
             stmt.setString(2, credentials.username());
             stmt.setString(3, DigestUtils.sha384Hex(credentials.password()));
             return stmt.executeUpdate();
-        }
-    }
-
-
-    public Integer getUserId(Credentials credentials) throws SQLException {
-        String sql = "SELECT id FROM users WHERE name = ? AND password_hash = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, credentials.username());
-            stmt.setString(2, DigestUtils.sha384Hex(credentials.password()));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                } else {
-                    return null;
-                }
-            }
         }
     }
 

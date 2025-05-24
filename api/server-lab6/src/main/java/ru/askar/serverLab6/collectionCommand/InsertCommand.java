@@ -14,9 +14,6 @@ public class InsertCommand extends ObjectCollectionCommand {
 
     @Override
     public CommandResponse execute(String[] args) {
-        if (object == null)
-            return new CommandResponse(
-                    CommandResponseCode.ERROR, "Данной команде требуется объект!");
         Long createdId;
         try {
             createdId = collectionManager.putWithValidation(object);

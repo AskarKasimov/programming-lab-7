@@ -21,9 +21,6 @@ public class RemoveLowerCommand extends ObjectCollectionCommand {
 
     @Override
     public CommandResponse execute(String[] args) {
-        if (object == null)
-            return new CommandResponse(
-                    CommandResponseCode.ERROR, "Данной команде требуется объект!");
         try {
             validateTicket(object);
         } catch (InvalidInputFieldException e) {

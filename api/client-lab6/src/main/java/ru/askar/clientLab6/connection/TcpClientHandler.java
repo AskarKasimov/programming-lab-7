@@ -159,15 +159,6 @@ public class TcpClientHandler implements ClientHandler {
 
                         if (nestedInputReader == null) {
                             commandExecutor.clearCommands();
-                            for (CommandAsList commandAsList : commandsAsList) {
-                                commandExecutor.register(
-                                        new ClientGenericCommand(
-                                                nestedInputReader,
-                                                commandAsList,
-                                                this,
-                                                commandExecutor.getOutputWriter(),
-                                                credentials));
-                            }
                             nestedInputReader =
                                     new InputReader<>(
                                             commandExecutor,
@@ -180,6 +171,15 @@ public class TcpClientHandler implements ClientHandler {
                                                     "Вход в режим полученных команд сервера"));
                         } else {
                             commandExecutor.clearCommands();
+                        }
+                        for (CommandAsList commandAsList : commandsAsList) {
+                            commandExecutor.register(
+                                    new ClientGenericCommand(
+                                            nestedInputReader,
+                                            commandAsList,
+                                            this,
+                                            commandExecutor.getOutputWriter(),
+                                            credentials));
                         }
                     } else if (dto instanceof CommandResponse commandResponse) {
                         commandExecutor

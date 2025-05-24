@@ -19,9 +19,6 @@ public class ReplaceIfGreaterCommand extends ObjectCollectionCommand {
 
     @Override
     public CommandResponse execute(String[] args) {
-        if (object == null)
-            return new CommandResponse(
-                    CommandResponseCode.ERROR, "Данной команде требуется объект!");
         Long idToUpdate;
         try {
             idToUpdate = Long.parseLong(args[0]);
